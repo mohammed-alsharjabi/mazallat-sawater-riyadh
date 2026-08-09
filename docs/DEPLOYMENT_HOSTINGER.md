@@ -47,6 +47,20 @@ bash deploy/hostinger-release.sh \
 php /home/USER/mazallat-app/current/artisan db:seed --force
 ```
 
+ارفع `assets.zip` إلى المسار المشترك التالي، ولا تضعه داخل `public_html`:
+
+```text
+/home/USER/mazallat-app/shared/storage/app/assets.zip
+```
+
+ثم نفذ الاستيراد. لا يغيّر الأمر أي خدمة من Draft إلى Published:
+
+```bash
+php /home/USER/mazallat-app/current/artisan services
+```
+
+احتفظ بالملف المضغوط وبـ`shared/storage/app/private/service-images/originals`. يجب أن يدعم PHP إضافات `zip`, `fileinfo`, `gd`, `exif` وWebP؛ AVIF اختياري. إذا استُخدم `--queue` بدل المعالجة المباشرة، شغّل عامل Queue قبل مراجعة الصور في اللوحة.
+
 إذا استُخدم `QUEUE_CONNECTION=database`، أضف Cron كل دقيقة:
 
 ```bash

@@ -36,6 +36,16 @@ class Service extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ServiceImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function processedImages(): HasMany
+    {
+        return $this->images()->where('processing_status', 'processed');
+    }
+
     public function articles(): BelongsToMany
     {
         return $this->belongsToMany(Article::class);

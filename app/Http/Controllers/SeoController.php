@@ -73,6 +73,16 @@ class SeoController extends Controller
     {
         $items = collect();
 
+        Service::published()->with(['images' => fn ($query) => $query->where('processing_status', 'processed')->orderBy('sort_order')])->get()->each(function (Service $service) use ($items): void {
+            foreach ($service->images as $image) {
+                $items->push([
+                    'page' => route('services.show', $service->slug),
+                    'image' => asset('storage/'.$image->optimized_path),
+                    'title' => $image->title ?: $image->alt_text ?: $service->name,
+                    'caption' => $image->caption,
+                ]);
+            }
+        });
         Service::published()->whereNotNull('featured_image')->get()->each(fn (Service $service) => $items->push([
             'page' => route('services.show', $service->slug),
             'image' => asset('storage/'.$service->featured_image),
