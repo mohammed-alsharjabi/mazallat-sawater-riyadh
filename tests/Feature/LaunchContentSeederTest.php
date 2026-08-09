@@ -1,0 +1,78 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Area;
+use App\Models\Article;
+use App\Models\Service;
+use App\Models\ServiceCategory;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class LaunchContentSeederTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_launch_catalog_is_complete_and_unconfirmed_content_stays_draft(): void
+    {
+        $this->seed();
+
+        $this->assertSame(5, ServiceCategory::query()->count());
+        $this->assertSame(60, Service::query()->count());
+        $this->assertSame(60, Service::query()->where('status', 'draft')->count());
+        $this->assertSame(0, Service::published()->count());
+        $this->assertSame(0, Service::query()->where('is_price_published', true)->count());
+        $this->assertSame(10, Article::query()->where('status', 'draft')->count());
+
+        $this->assertDatabaseHas('services', ['name' => 'مظلات سيارات PVC', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'سواتر بديل الخشب WPC', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'صيانة وترميم المظلات والسواتر', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'قرميد معدني', 'status' => 'draft']);
+    }
+
+    public function test_every_seeded_service_has_the_full_editable_content_template(): void
+    {
+        $this->seed();
+
+        $fields = ['content', 'types', 'use_cases', 'materials_details', 'advantages', 'disadvantages', 'installation_steps', 'price_factors', 'selection_tips', 'cta'];
+
+        Service::query()->with(['materials', 'faqs'])->each(function (Service $service) use ($fields): void {
+            foreach ($fields as $field) {
+                $this->assertNotEmpty($service->{$field}, $service->name.' is missing '.$field);
+            }
+            $this->assertGreaterThanOrEqual(1, $service->materials->count(), $service->name.' has no linked material');
+            $this->assertSame(2, $service->faqs->count(), $service->name.' must have two FAQs');
+        });
+    }
+
+    public function test_only_central_riyadh_is_published_and_other_area_pages_are_noindex(): void
+    {
+        $this->seed();
+
+        $this->assertSame(['وسط الرياض'], Area::published()->pluck('name')->all());
+        $this->assertDatabaseHas('areas', ['name' => 'وسط الرياض', 'is_primary' => true, 'status' => 'published']);
+
+        Area::query()->where('name', '!=', 'وسط الرياض')->with('seo')->each(function (Area $area): void {
+            $this->assertSame('draft', $area->status);
+            $this->assertSame('noindex,follow', $area->seo->robots);
+            $this->get(route('areas.show', $area->slug))->assertNotFound();
+        });
+    }
+
+    public function test_reseeding_does_not_duplicate_catalog_records(): void
+    {
+        $this->seed();
+        $service = Service::query()->where('name', 'مظلات سيارات')->firstOrFail();
+        $service->update(['content' => 'نص تحريري معتمد من لوحة التحكم']);
+        $area = Area::query()->where('name', 'شمال الرياض')->firstOrFail();
+        $area->update(['status' => 'published', 'published_at' => now()]);
+        $this->seed();
+
+        $this->assertSame(60, Service::query()->count());
+        $this->assertSame(10, Article::query()->count());
+        $this->assertSame(5, Area::query()->count());
+        $this->assertSame('نص تحريري معتمد من لوحة التحكم', $service->fresh()->content);
+        $this->assertSame('published', $area->fresh()->status);
+    }
+}
