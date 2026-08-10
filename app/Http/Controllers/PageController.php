@@ -33,6 +33,17 @@ class PageController extends Controller
             ->values();
         $heroService = $featuredServices->firstWhere('name', 'مظلات شد إنشائي') ?: $featuredServices->first();
         $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
+        $heroSlides = collect([$heroService])
+            ->filter()
+            ->concat($featuredServices->where('id', '!=', $heroService?->id))
+            ->map(function (Service $service): ?array {
+                $image = $service->images->firstWhere('is_cover', true) ?: $service->images->first();
+
+                return $image ? ['service' => $service, 'image' => $image] : null;
+            })
+            ->filter()
+            ->take(6)
+            ->values();
         $areas = Area::published()->withCount(['projects' => fn ($q) => $q->published()])->orderByDesc('is_primary')->orderBy('name')->limit(8)->get();
         $projects = Project::published()->with(['service', 'area', 'images'])->orderByDesc('is_featured')->latest('published_at')->limit(6)->get();
         $beforeAfterProject = Project::published()->whereHas('images', fn ($query) => $query->where('stage', 'before'))->whereHas('images', fn ($query) => $query->where('stage', 'after'))->with(['service', 'area', 'images'])->latest('published_at')->first();
@@ -49,7 +60,7 @@ class PageController extends Controller
         $testimonials = Testimonial::query()->where('is_approved', true)->with(['area', 'project'])->latest()->limit(3)->get();
         $seo = Seo::page('مظلات وسواتر الرياض | طلب معاينة وتركيب داخل الرياض', 'خدمات مظلات وسواتر داخل مدينة الرياض. تعرّف على الخيارات والخامات واطلب معاينة وعرض سعر عبر الاتصال أو واتساب.');
 
-        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'areas', 'projects', 'beforeAfterProject', 'trustItems', 'faqs', 'articles', 'testimonials', 'seo'));
+        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'heroSlides', 'areas', 'projects', 'beforeAfterProject', 'trustItems', 'faqs', 'articles', 'testimonials', 'seo'));
     }
 
     public function about(): View

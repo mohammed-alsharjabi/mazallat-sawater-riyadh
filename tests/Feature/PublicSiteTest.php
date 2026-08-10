@@ -37,7 +37,10 @@ class PublicSiteTest extends TestCase
             ->assertSee('tel:+966562066426', false)
             ->assertSee('https://wa.me/966562066426', false)
             ->assertSee('application/ld+json', false)
-            ->assertSee('<link rel="canonical"', false);
+            ->assertSee('<link rel="canonical"', false)
+            ->assertSee('data-mega-menu', false)
+            ->assertSee('data-service-showcase', false)
+            ->assertSee('اختر التصنيف ثم الخدمة المناسبة');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
             $this->get(route($route))->assertOk();
@@ -57,7 +60,10 @@ class PublicSiteTest extends TestCase
         $service = Service::published()->firstOrFail();
         $area = Area::published()->firstOrFail();
         $article = Article::published()->firstOrFail();
-        $this->get(route('services.show', $service->slug))->assertOk()->assertSee($service->name);
+        $this->get(route('services.show', $service->slug))->assertOk()
+            ->assertSee($service->name)
+            ->assertSee('نبذة عن الخدمة')
+            ->assertSee('اطلب معاينة');
         $this->get(route('areas.show', $area->slug))->assertOk()->assertSee($area->name);
         $this->get(route('guide.show', $article->slug))->assertOk()->assertSee($article->title);
     }

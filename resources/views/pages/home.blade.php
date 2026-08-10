@@ -1,50 +1,78 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="reference-hero section-indexed">
-    <div class="container-shell reference-hero-grid">
-        <div class="reference-hero-copy" data-hero-copy>
-            <p class="eyebrow">{{ $siteSettings['hero_eyebrow'] ?? 'حلول هندسية للمساحات الخارجية' }}</p>
+@php
+    $firstHeroSlide = $heroSlides->first();
+    $showcaseServices = collect([$heroService])->filter()->concat($featuredServices)->unique('id')->values();
+@endphp
+<section class="immersive-hero" data-hero-slider aria-label="أعمال وخدمات مظلات وسواتر الرياض">
+    <div class="immersive-hero-slides" aria-live="off">
+        @foreach($heroSlides as $slide)
+            <article class="immersive-hero-slide {{ $loop->first ? 'active' : '' }}" data-hero-slide data-service-name="{{ $slide['service']->name }}" data-service-url="{{ route('services.show', $slide['service']->slug) }}" aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
+                <x-responsive-image :image="$slide['image']" :alt="$slide['image']->alt_text ?: $slide['service']->name" variant="cover" :loading="$loop->first ? 'eager' : 'lazy'" :fetchpriority="$loop->first ? 'high' : 'auto'" sizes="100vw" />
+            </article>
+        @endforeach
+    </div>
+    <div class="immersive-hero-shade" aria-hidden="true"></div>
+    <div class="container-shell immersive-hero-content">
+        <div data-hero-copy>
+            <p class="hero-kicker"><span></span>{{ $siteSettings['hero_eyebrow'] ?? 'حلول هندسية للمساحات الخارجية' }}</p>
             <h1>{{ $siteSettings['hero_title'] ?? 'نصمم الظل كجزء من المكان' }}</h1>
             <p>{{ $siteSettings['hero_description'] ?? 'مظلات وسواتر وهياكل مصممة لمناخ الرياض ومساحة مشروعك.' }}</p>
-            <div class="hero-actions"><a class="button button-primary" href="{{ route('quote') }}">ابدأ مشروعك</a><a class="text-link underline-link" href="#services">استعرض الأعمال</a></div>
+            <div class="hero-actions">
+                <a class="button hero-primary-action" href="{{ route('quote') }}">ابدأ مشروعك <span aria-hidden="true">←</span></a>
+                <a class="hero-service-link" href="{{ $firstHeroSlide ? route('services.show', $firstHeroSlide['service']->slug) : route('services.index') }}" data-hero-service-link>شاهد <strong data-hero-service-name>{{ $firstHeroSlide['service']->name ?? 'خدماتنا' }}</strong></a>
+            </div>
         </div>
-        <div class="technical-image hero-reference-image" data-hero-visual>
-            @if($heroImage)
-                <x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: ($heroService?->name ?? 'مظلات وسواتر في الرياض')" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 780px) 100vw, 82vw" />
-                <span class="measure measure-top" aria-hidden="true">عرض بحسب الموقع</span><span class="measure measure-side" aria-hidden="true">ارتفاع المعاينة</span>
-            @endif
+        <div class="hero-slider-controls" aria-label="التحكم في صور الهيرو">
+            <button type="button" data-hero-prev aria-label="الصورة السابقة">→</button>
+            <div class="hero-slider-dots" role="tablist" aria-label="صور الأعمال">
+                @foreach($heroSlides as $slide)
+                    <button type="button" @class(['active' => $loop->first]) data-hero-dot="{{ $loop->index }}" role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}" aria-label="عرض {{ $slide['service']->name }}"><span></span></button>
+                @endforeach
+            </div>
+            <button type="button" data-hero-next aria-label="الصورة التالية">←</button>
+            <span class="hero-slider-count"><b data-hero-current>01</b> / {{ str_pad($heroSlides->count(), 2, '0', STR_PAD_LEFT) }}</span>
         </div>
-        @if($heroService)
-            <dl class="hero-facts">
-                <div><dt>الموقع</dt><dd>{{ $siteSettings['city'] }}</dd></div>
-                <div><dt>الخامة</dt><dd>{{ $heroService->category->name }}</dd></div>
-                @if($heroService->images_count)<div><dt>المعرض</dt><dd>{{ $heroService->images_count }} صورة حقيقية</dd></div>@endif
-            </dl>
-        @endif
     </div>
+    <a class="hero-scroll-cue" href="#services"><span>استكشف الخدمات</span><i aria-hidden="true"></i></a>
 </section>
 
-<section id="services" class="section-block section-indexed services-accordion-section" data-service-accordion data-reveal>
-    <div class="container-shell reference-two-column">
-        <div class="section-copy"><p class="eyebrow">الخدمات الأساسية</p><h2>اختر ما تريد تنفيذه</h2><p>الصور والمحتوى في كل خدمة مرتبطان مباشرة بقاعدة البيانات ومعرضها المعتمد.</p></div>
-        <div class="services-accordion">
-            @foreach($featuredServices as $item)
-                @php($active = $item->name === 'مظلات شد إنشائي' || ($loop->first && !$featuredServices->contains('name', 'مظلات شد إنشائي')))
-                @php($accordionImage = $item->images->firstWhere('is_cover', true) ?: $item->images->first())
-                <article @class(['service-accordion-item', 'active' => $active]) data-accordion-item>
-                    <button type="button" aria-expanded="{{ $active ? 'true' : 'false' }}" data-accordion-trigger>
+<section id="services" class="section-block service-showcase section-indexed" data-service-showcase data-reveal>
+    <div class="container-shell">
+        <div class="service-showcase-heading">
+            <div><p class="eyebrow">خدمات مرتبطة بصورها الحقيقية</p><h2>اختر الخدمة وشاهد نبذتها وأعمالها</h2></div>
+            <p>اضغط على أي خدمة لعرض تعريفها، طلب المعاينة، وصور الأعمال المرتبطة بها فقط.</p>
+        </div>
+        <div class="service-showcase-layout">
+            <div class="service-showcase-tabs" role="tablist" aria-label="الخدمات الأساسية">
+                @foreach($showcaseServices as $item)
+                    <button type="button" @class(['active' => $loop->first]) id="service-tab-{{ $item->id }}" data-service-tab="{{ $loop->index }}" role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}" aria-controls="service-panel-{{ $item->id }}">
                         <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                        <strong>{{ $item->name }}</strong>
-                        @if($item->images_count)<small>{{ $item->images_count }} صورة</small>@endif
-                        <i aria-hidden="true">⌄</i>
+                        <span><small>{{ $item->category->name }}</small><strong>{{ $item->name }}</strong></span>
+                        <em>{{ $item->images_count }} صورة</em><i aria-hidden="true">←</i>
                     </button>
-                    <div class="service-accordion-panel" @if(!$active) hidden @endif>
-                        @if($accordionImage)<a href="{{ route('services.show', $item->slug) }}"><x-responsive-image :image="$accordionImage" :alt="$accordionImage->alt_text ?: $item->name" variant="gallery" sizes="(max-width: 780px) 100vw, 55vw" /></a>@endif
-                        <div><p>{{ $item->excerpt }}</p><a class="text-link" href="{{ route('services.show', $item->slug) }}">تفاصيل الخدمة ←</a></div>
-                    </div>
-                </article>
-            @endforeach
+                @endforeach
+            </div>
+            <div class="service-showcase-panels">
+                @foreach($showcaseServices as $item)
+                    @php($panelImages = $item->images->take(5))
+                    @php($panelWhatsapp = $siteSettings['whatsapp_url'].'?text='.rawurlencode('مرحبًا، أود الاستفسار عن خدمة '.$item->name.' في الرياض: '.route('services.show', $item->slug)))
+                    <article id="service-panel-{{ $item->id }}" @class(['service-showcase-panel', 'active' => $loop->first]) data-service-panel="{{ $loop->index }}" role="tabpanel" aria-labelledby="service-tab-{{ $item->id }}" @if(!$loop->first) hidden @endif>
+                        <div class="service-showcase-intro">
+                            <div><p class="eyebrow">{{ $item->category->name }}</p><h3>{{ $item->name }}</h3><p>{{ $item->excerpt }}</p></div>
+                            <div><a class="button button-primary" href="{{ route('quote', ['service' => $item->id]) }}">اطلب معاينة</a><a class="button button-outline" href="{{ $panelWhatsapp }}" target="_blank" rel="noopener">تواصل واتساب</a><a class="text-link" href="{{ route('services.show', $item->slug) }}">كل تفاصيل الخدمة ←</a></div>
+                        </div>
+                        @if($panelImages->isNotEmpty())
+                            <div class="service-showcase-gallery" aria-label="صور أعمال {{ $item->name }}">
+                                @foreach($panelImages as $image)
+                                    <figure><x-responsive-image :image="$image" :alt="$image->alt_text ?: $item->name" :variant="$loop->first ? 'gallery' : 'thumbnail'" sizes="(max-width: 780px) 85vw, 32vw" /><figcaption>{{ $image->caption ?: $image->title ?: $item->name }}</figcaption></figure>
+                                @endforeach
+                            </div>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
         </div>
     </div>
 </section>

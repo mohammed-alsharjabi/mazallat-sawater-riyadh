@@ -3,7 +3,6 @@
 @php
     $galleryImages = $service->images->sortByDesc('is_cover')->values()->take(12);
     $heroImage = $service->images->firstWhere('is_cover', true) ?: $galleryImages->first();
-    $detailImages = $service->images->where('id', '!=', $heroImage?->id)->sortByDesc(fn ($image) => $image->height ? $image->width / $image->height : 0)->take(2);
     $types = collect(preg_split('/\R/u', (string) $service->types))->map('trim')->filter()->values();
     $useCases = collect(preg_split('/\R/u', (string) $service->use_cases))->map('trim')->filter()->values();
     $materialsDetails = collect(preg_split('/\R/u', (string) $service->materials_details))->map('trim')->filter()->values();
@@ -17,46 +16,41 @@
 @endphp
 
 @section('content')
-<section class="service-reference-hero section-indexed">
-    <div class="container-shell">
-        <nav class="breadcrumbs" aria-label="مسار الصفحة"><a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">الخدمات</a><span>/</span><b aria-current="page">{{ $service->name }}</b></nav>
-        <div class="service-reference-grid">
-            <div class="service-reference-copy" data-hero-copy>
-                <p class="eyebrow">{{ $service->category->name }}</p>
-                <h1>{{ $service->name }} في الرياض</h1>
-                <p>{{ $service->excerpt }}</p>
-                <div class="hero-actions"><a class="button button-primary" href="{{ route('quote', ['service' => $service->id]) }}">اطلب معاينة</a><a class="text-link" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener">واتساب ◉</a></div>
-            </div>
-            <div class="service-reference-media technical-image" data-hero-visual>
-                @if($heroImage)<x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 780px) 100vw, 56vw" /><span class="measure measure-top" aria-hidden="true">المقاس يحدد بعد المعاينة</span>@endif
-            </div>
-            @if($detailImages->isNotEmpty())<div class="hero-detail-images">@foreach($detailImages as $image)<figure><x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" sizes="180px" /><figcaption>{{ $image->caption ?: $image->title }}</figcaption></figure>@endforeach</div>@endif
-        </div>
+<section class="service-immersive-hero">
+    @if($heroImage)<div class="service-immersive-media"><x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" variant="cover" loading="eager" fetchpriority="high" sizes="100vw" /></div>@endif
+    <div class="service-immersive-shade" aria-hidden="true"></div>
+    <div class="container-shell service-immersive-content" data-hero-copy>
+        <nav class="breadcrumbs breadcrumbs-light" aria-label="مسار الصفحة"><a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">الخدمات</a><span>/</span><b aria-current="page">{{ $service->name }}</b></nav>
+        <p class="hero-kicker"><span></span>{{ $service->category->name }}</p>
+        <h1>{{ $service->name }} في الرياض</h1>
+        <p>{{ $service->excerpt }}</p>
+        <div class="hero-actions"><a class="button hero-primary-action" href="{{ route('quote', ['service' => $service->id]) }}">اطلب معاينة <span aria-hidden="true">←</span></a><a class="button hero-ghost-action" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener">تواصل واتساب</a></div>
+        <dl><div><dt>التصنيف</dt><dd>{{ $service->category->name }}</dd></div><div><dt>صور الأعمال</dt><dd>{{ $galleryImages->count() }} صورة</dd></div><div><dt>نطاق الخدمة</dt><dd>{{ $siteSettings['city'] }}</dd></div></dl>
     </div>
 </section>
 
-<nav class="service-section-nav" aria-label="أقسام الخدمة"><strong>المعرض</strong><a href="#about-service">عن الخدمة</a>@if($materialsDetails->isNotEmpty())<a href="#materials">الخامات</a>@endif@if($beforeAfterProject)<a href="#before-after">قبل وبعد</a>@endif<a href="#related">خدمات مرتبطة</a></nav>
+<nav class="service-section-nav" aria-label="أقسام الخدمة"><strong>تفاصيل الخدمة</strong><a href="#about-service">نبذة وطلب معاينة</a>@if($galleryImages->isNotEmpty())<a href="#service-works">صور الأعمال</a>@endif@if($materialsDetails->isNotEmpty())<a href="#materials">الخامات</a>@endif@if($beforeAfterProject)<a href="#before-after">قبل وبعد</a>@endif<a href="#related">خدمات مرتبطة</a></nav>
+
+<section id="about-service" class="section-block service-intro-reference section-indexed" data-reveal>
+    <div class="container-shell service-description-grid">
+        <article><p class="eyebrow">نبذة عن الخدمة</p><h2>{{ $service->name }} للمواقع المختلفة</h2><p>{!! nl2br(e($service->content)) !!}</p></article>
+        <aside class="quote-aside"><span>01</span><p class="eyebrow">ابدأ من هنا</p><h2>أرسل موقعك وصور المساحة</h2><p>{{ $service->cta }}</p><a class="button button-primary" href="{{ route('quote', ['service' => $service->id]) }}">اطلب معاينة</a><a class="button button-outline" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener">تواصل واتساب</a></aside>
+    </div>
+</section>
 
 @if($galleryImages->isNotEmpty())
-<section class="section-block service-gallery-reference section-indexed" data-reveal>
-    <div class="container-shell"><div class="section-row"><div><p class="eyebrow">صور الخدمة</p><h2>معرض {{ $service->name }}</h2></div><span>{{ $galleryImages->count() }} صورة</span></div>
-        <div class="reference-gallery">@foreach($galleryImages->take(6) as $image)<figure><x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" sizes="(max-width: 780px) 100vw, 33vw" /><figcaption>{{ $image->caption ?: $image->title ?: $service->name }}</figcaption></figure>@endforeach</div>
+<section id="service-works" class="section-block service-gallery-reference section-indexed" data-reveal>
+    <div class="container-shell"><div class="section-row"><div><p class="eyebrow">أعمال هذه الخدمة فقط</p><h2>صور {{ $service->name }}</h2></div><span>{{ $galleryImages->count() }} صورة مرتبطة بالخدمة</span></div>
+        <div class="reference-gallery">@foreach($galleryImages->take(10) as $image)<figure><x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" sizes="(max-width: 780px) 100vw, 33vw" /><figcaption>{{ $image->caption ?: $image->title ?: $service->name }}</figcaption></figure>@endforeach</div>
     </div>
 </section>
 @endif
 
-<section id="about-service" class="section-block solution-steps section-indexed" data-reveal>
+<section class="section-block solution-steps section-indexed" data-reveal>
     <div class="container-shell"><div class="section-row"><div><p class="eyebrow">من الموقع إلى الحل</p><h2>كيف نحدد الحل المناسب؟</h2></div></div>
         <ol class="solution-step-grid">
             @foreach($installationSteps->take(4) as $step)<li><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $step }}</h3><p>{{ $loop->first ? 'نراجع المساحة والاستخدام والعناصر القائمة قبل اقتراح التفاصيل.' : 'تُثبت التفاصيل والمواصفات مع صاحب المشروع قبل الانتقال للمرحلة التالية.' }}</p></li>@endforeach
         </ol>
-    </div>
-</section>
-
-<section class="section-block service-description-reference section-indexed" data-reveal>
-    <div class="container-shell service-description-grid">
-        <article><p class="eyebrow">تعريف الخدمة</p><h2>{{ $service->name }} للمواقع المختلفة</h2><p>{!! nl2br(e($service->content)) !!}</p></article>
-        <aside class="quote-aside"><p class="eyebrow">طلب سريع</p><h2>أرسل موقعك وصور المساحة</h2><p>{{ $service->cta }}</p><a class="button button-primary" href="{{ route('quote', ['service' => $service->id]) }}">ابدأ الطلب</a><a class="button button-outline" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener">واتساب</a></aside>
     </div>
 </section>
 
