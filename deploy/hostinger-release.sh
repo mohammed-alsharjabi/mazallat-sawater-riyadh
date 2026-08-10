@@ -9,6 +9,7 @@ PUBLIC_TARGET="${PUBLIC_TARGET%/}"
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
 RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
 SHARED_DIR="${APP_ROOT}/shared"
+PREBUILT_DIR="${4:-${SHARED_DIR}/build}"
 
 if [[ ! -f "${SOURCE_DIR}/artisan" || ! -d "${SOURCE_DIR}/.git" ]]; then
     echo "المسار الأول ليس نسخة Git صالحة لمشروع Laravel." >&2
@@ -40,17 +41,37 @@ git -C "${SOURCE_DIR}" archive --format=tar HEAD | tar -xf - -C "${RELEASE_DIR}"
 if [[ ! -d "${SHARED_DIR}/storage" ]]; then
     mv "${RELEASE_DIR}/storage" "${SHARED_DIR}/storage"
 else
-    rm -rf "${RELEASE_DIR}/storage"
+    mv "${RELEASE_DIR}/storage" "${RELEASE_DIR}/storage-template"
 fi
 ln -s "${SHARED_DIR}/storage" "${RELEASE_DIR}/storage"
 ln -s "${SHARED_DIR}/.env" "${RELEASE_DIR}/.env"
 
+if [[ -f "${SHARED_DIR}/database/database.sqlite" ]]; then
+    cp -p "${SHARED_DIR}/database/database.sqlite" "${SHARED_DIR}/database/database.sqlite.backup-${RELEASE_ID}"
+fi
+
 composer install --working-dir="${RELEASE_DIR}" --no-dev --no-interaction --prefer-dist --optimize-autoloader
-npm --prefix "${RELEASE_DIR}" ci
-npm --prefix "${RELEASE_DIR}" run build
+if command -v npm >/dev/null 2>&1; then
+    npm --prefix "${RELEASE_DIR}" ci
+    npm --prefix "${RELEASE_DIR}" run build
+elif [[ -f "${PREBUILT_DIR}/manifest.json" ]]; then
+    mkdir -p "${RELEASE_DIR}/public/build"
+    cp -R "${PREBUILT_DIR}/." "${RELEASE_DIR}/public/build/"
+else
+    echo "أُوقف النشر: Node.js غير متاح ولم يُعثر على build جاهز في ${PREBUILT_DIR}." >&2
+    exit 1
+fi
 
 php "${RELEASE_DIR}/artisan" migrate --force
-php "${RELEASE_DIR}/artisan" storage:link
+if php -r 'exit(function_exists("exec") ? 0 : 1);'; then
+    php "${RELEASE_DIR}/artisan" storage:link
+else
+    STORAGE_TARGET="${RELEASE_DIR}/public/storage"
+    if [[ -e "${STORAGE_TARGET}" || -L "${STORAGE_TARGET}" ]]; then
+        mv "${STORAGE_TARGET}" "${RELEASE_DIR}/public/storage.prelink-${RELEASE_ID}"
+    fi
+    ln -s "${SHARED_DIR}/storage/app/public" "${STORAGE_TARGET}"
+fi
 php "${RELEASE_DIR}/artisan" optimize
 php "${RELEASE_DIR}/artisan" queue:restart
 

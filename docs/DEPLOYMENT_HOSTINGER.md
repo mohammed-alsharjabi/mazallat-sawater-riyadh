@@ -32,6 +32,17 @@ php artisan key:generate --show
 
 ## النشر الآمن
 
+الخادم الحالي لا يوفر Node.js. ابنِ الأصول محليًا ثم ارفعها إلى المسار المشترك قبل تشغيل سكربت النشر:
+
+```bash
+npm ci
+npm run build
+rsync -az --delete -e "ssh -p 65002" public/build/ \
+  USER@HOST:/home/USER/mazallat-app/shared/build/
+```
+
+إذا كان Node.js متاحًا لاحقًا فسيبني السكربت الأصول على الخادم تلقائيًا، وإلا سيستخدم النسخة الموجودة في `shared/build`. كما ينشئ نسخة مؤرخة من SQLite ويربط `public/storage` مباشرةً عندما تكون دالة PHP `exec()` معطلة.
+
 ```bash
 cd /home/USER/mazallat-source
 git pull --ff-only origin main
