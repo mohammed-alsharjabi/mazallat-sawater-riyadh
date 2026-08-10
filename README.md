@@ -118,7 +118,7 @@ php artisan optimize
 
 يجب أن يكون Document Root هو مجلد `public` فقط. عند وضع Cloudflare أمام الخادم، اقفل الوصول المباشر إلى الأصل واضبط عناوين البروكسي الموثوقة في `TRUSTED_PROXIES`. تجاوز كاش HTML للمسارات `/admin*` و`/livewire*` و`/طلبات` وصفحتي `/طلب-معاينة` و`/تواصل-معنا`، ولا تكاش الاستجابات التي تحمل Cookie جلسة. يمكن كاش الأصول المبنية والصور لمدة طويلة مع احترام أسماء الملفات الموقعة من Vite.
 
-للنشر على المسار الحالي `https://test-node.nicebox-sa.com/booking` استخدم [.env.production.example](.env.production.example) واقرأ [دليل Hostinger](docs/DEPLOYMENT_HOSTINGER.md). سكربت النشر لا يستبدل جذر النطاق؛ يستهدف `public_html/booking` فقط ويحتفظ بنسخة قابلة للاستعادة من محتواه السابق.
+الرابط الإنتاجي المعتمد هو `https://test-node.nicebox-sa.com/` من جذر النطاق الفرعي. استخدم [.env.production.example](.env.production.example) واقرأ [دليل Hostinger](docs/DEPLOYMENT_HOSTINGER.md). سكربت النشر لا يقبل إلا `public_html` الخاص بهذا النطاق تحديدًا، وينقل محتواه الحالي إلى نسخة احتياطية مؤرخة قبل ربط الإصدار الجديد.
 
 ## الفحص
 
