@@ -4,7 +4,8 @@ set -euo pipefail
 
 SOURCE_DIR="${1:?مرر مسار نسخة Git أولًا}"
 APP_ROOT="${2:?مرر مسار التطبيق الدائم ثانيًا}"
-PUBLIC_TARGET="${3:?مرر مسار public_html/booking ثالثًا}"
+PUBLIC_TARGET="${3:?مرر مسار public_html الخاص بـ test-node.nicebox-sa.com ثالثًا}"
+PUBLIC_TARGET="${PUBLIC_TARGET%/}"
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
 RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
 SHARED_DIR="${APP_ROOT}/shared"
@@ -15,9 +16,9 @@ if [[ ! -f "${SOURCE_DIR}/artisan" || ! -d "${SOURCE_DIR}/.git" ]]; then
 fi
 
 case "${PUBLIC_TARGET}" in
-    */public_html/booking|*/domains/*/public_html/booking) ;;
+    */domains/test-node.nicebox-sa.com/public_html) ;;
     *)
-        echo "أُوقف النشر: يجب أن ينتهي المسار العام الموثق بـ public_html/booking." >&2
+        echo "أُوقف النشر: يجب أن يكون الهدف public_html الخاص بالنطاق test-node.nicebox-sa.com فقط." >&2
         exit 1
         ;;
 esac

@@ -1,8 +1,10 @@
 @extends('layouts.app')
 
 @php
-    $galleryImages = $service->projects->flatMap->images->take(8);
-    $heroImage = $galleryImages->first();
+    $serviceImages = $service->images;
+    $projectImages = $service->projects->flatMap->images;
+    $galleryImages = $serviceImages->isNotEmpty() ? $serviceImages->take(12) : $projectImages->take(8);
+    $heroImage = $serviceImages->firstWhere('is_cover', true) ?: $galleryImages->first();
     $types = collect(preg_split('/\r\n|\r|\n/', (string) $service->types))->filter();
     $useCases = collect(preg_split('/\r\n|\r|\n/', (string) $service->use_cases))->filter();
     $materialsDetails = collect(preg_split('/\r\n|\r|\n/', (string) $service->materials_details))->filter();
@@ -24,7 +26,7 @@
             <div class="hero-actions"><a class="button button-accent" href="{{ route('quote',['service'=>$service->id]) }}">{{ $siteSettings['inspection_cta_label'] ?? 'اطلب معاينة مجانية' }}</a><a class="button button-ghost" href="{{ $siteSettings['whatsapp_url'] }}" target="_blank" rel="noopener">واتساب</a></div>
         </div>
         <div class="service-hero-media">
-            @if($heroImage)<x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" loading="eager" fetchpriority="high" sizes="(max-width: 900px) 100vw, 48vw" />@else<div class="architectural-fallback compact"><div class="structure-lines"><i></i><i></i><i></i><span></span></div><p><small>معرض الخدمة</small><strong>تظهر صورة من مشروع حقيقي مرتبط</strong></p></div>@endif
+            @if($heroImage)<x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" :variant="$heroImage instanceof \App\Models\ServiceImage ? 'cover' : 'gallery'" loading="eager" fetchpriority="high" sizes="(max-width: 900px) 100vw, 48vw" />@else<div class="architectural-fallback compact"><div class="structure-lines"><i></i><i></i><i></i><span></span></div><p><small>معرض الخدمة</small><strong>تظهر صورة من مشروع حقيقي مرتبط</strong></p></div>@endif
         </div>
     </div>
 </section>
@@ -32,7 +34,7 @@
 <section class="section-block"><div class="container-shell detail-grid service-intro-grid"><article class="prose-content" data-reveal><p class="eyebrow">عن الخدمة</p><h2>{{ $service->name }} للمواقع داخل الرياض</h2>{!! nl2br(e($service->content)) !!}</article><aside class="sticky-card"><p class="eyebrow">تواصل مباشر</p><h2>اعرض موقعك على الفريق</h2><p>شارك المنطقة والمقاسات التقريبية والصور عند التواصل لتكوين تصور أولي.</p><a class="button button-primary w-full" href="{{ route('quote',['service'=>$service->id]) }}">طلب معاينة</a><a class="button button-outline w-full" href="{{ $siteSettings['phone_tel'] }}">اتصال <span dir="ltr">{{ $siteSettings['phone_display'] }}</span></a><a class="button button-outline w-full" href="{{ $siteSettings['whatsapp_url'] }}" target="_blank" rel="noopener">واتساب</a></aside></div></section>
 
 @if($galleryImages->isNotEmpty())
-<section class="section-block service-gallery-section" data-reveal><div class="container-shell"><x-section-heading eyebrow="صور حقيقية" title="معرض أعمال مرتبط بالخدمة" description="الصور أدناه مأخوذة من مشاريع منشورة ومرتبطة بهذه الخدمة." /><div class="service-gallery mt-10">@foreach($galleryImages as $image)<x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" sizes="(max-width: 700px) 100vw, (max-width: 1024px) 50vw, 33vw" />@endforeach</div></div></section>
+<section class="section-block service-gallery-section" data-reveal><div class="container-shell"><x-section-heading eyebrow="صور حقيقية" title="معرض أعمال مرتبط بالخدمة" description="صور مرتبطة بالخدمة ومراجعة من لوحة التحكم، مع نسخ متجاوبة وخفيفة للويب." /><div class="service-gallery mt-10">@foreach($galleryImages as $image)<figure><x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" sizes="(max-width: 700px) 100vw, (max-width: 1024px) 50vw, 33vw" /><figcaption>{{ $image->caption ?: $image->title ?: $service->name }}</figcaption></figure>@endforeach</div></div></section>
 @endif
 
 <section class="section-block sand-section"><div class="container-shell service-spec-grid">

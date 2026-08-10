@@ -5,6 +5,7 @@
     $advancedFields = collect($definition['fields'])->except([...$basicNames, ...$imageMetaNames, 'slug']);
 @endphp
 
+<div class="content-editor-shell">
 <form wire:submit="save" class="space-y-7">
     @if($errors->any())
         <div class="notice-error" role="alert"><strong>لم يتم الحفظ بعد.</strong><span>راجع الحقول المعلّمة أدناه ثم حاول مرة أخرى.</span></div>
@@ -102,3 +103,8 @@
 
     <div class="admin-save-bar"><button class="button button-primary" type="submit" wire:loading.attr="disabled">حفظ المحتوى</button><span wire:loading>جارٍ الحفظ…</span><small>يمكن حفظ المحتوى كمسودة والعودة إليه لاحقًا.</small></div>
 </form>
+
+@if($type === 'services' && $model)
+    <livewire:admin.service-image-manager :service="$model" :key="'service-images-'.$model->id" />
+@endif
+</div>

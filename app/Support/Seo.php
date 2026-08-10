@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectImage;
 use App\Models\SeoMetadata;
 use App\Models\Service;
+use App\Models\ServiceImage;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
@@ -139,6 +140,11 @@ final class Seo
             if ($model->featured_image) {
                 $schemas[] = self::featuredImageSchema($model, $model->name);
             }
+            if ($model->relationLoaded('images')) {
+                foreach ($model->images as $image) {
+                    $schemas[] = self::serviceImageSchema($image, $model);
+                }
+            }
         } elseif ($model instanceof Article) {
             $schemas[] = ['@context' => 'https://schema.org', '@type' => 'Article', 'headline' => $model->title, 'description' => $model->excerpt, 'datePublished' => $model->published_at?->toAtomString(), 'dateModified' => $model->updated_at?->toAtomString(), 'mainEntityOfPage' => route('guide.show', $model->slug), 'author' => ['@id' => url('/').'#organization'], 'publisher' => ['@id' => url('/').'#organization']];
             if ($model->featured_image) {
@@ -188,6 +194,21 @@ final class Seo
         ], fn ($value) => $value !== null && $value !== '');
     }
 
+    private static function serviceImageSchema(ServiceImage $image, Service $service): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'ImageObject',
+            'contentUrl' => asset('storage/'.$image->optimized_path),
+            'name' => $image->title ?: $image->alt_text ?: $service->name,
+            'caption' => $image->caption,
+            'width' => $image->width,
+            'height' => $image->height,
+            'representativeOfPage' => $image->is_cover,
+            'encodingFormat' => $image->mime_type,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     private static function videoSchema(Model $model): array
     {
         $title = $model->video_title ?: ($model->title ?? $model->name ?? 'فيديو');
@@ -213,6 +234,9 @@ final class Seo
         }
         if ($model instanceof Project) {
             return $model->images->firstWhere('is_cover', true)?->path ?: $model->images->first()?->path;
+        }
+        if ($model instanceof Service && $model->relationLoaded('images')) {
+            return $model->images->firstWhere('is_cover', true)?->optimized_path ?: $model->images->first()?->optimized_path ?: $model->featured_image;
         }
 
         return $model->featured_image ?? null;

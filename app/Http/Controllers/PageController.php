@@ -69,7 +69,13 @@ class PageController extends Controller
 
     public function service(string $slug): View
     {
-        $service = Service::published()->where('slug', $slug)->with(['category', 'materials', 'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'), 'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6), 'articles' => fn ($q) => $q->published()->limit(4), 'seo'])->firstOrFail();
+        $service = Service::published()->where('slug', $slug)->with([
+            'category', 'materials',
+            'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(16),
+            'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+            'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6),
+            'articles' => fn ($q) => $q->published()->limit(4), 'seo',
+        ])->firstOrFail();
         $related = Service::published()->where('service_category_id', $service->service_category_id)->whereKeyNot($service->id)->limit(3)->get();
         $areas = Area::published()->orderByDesc('is_primary')->orderBy('name')->get();
         $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]), [Seo::faqSchema($service->faqs)]);
