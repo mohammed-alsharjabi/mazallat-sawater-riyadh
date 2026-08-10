@@ -26,6 +26,7 @@ class ServiceCatalogSeeder extends Seeder
             );
 
             foreach ($categoryData['services'] as $serviceIndex => $data) {
+                $isConfirmedForLaunch = in_array($data['name'], config('site.launch_services', []), true);
                 $service = Service::query()->firstOrCreate(
                     ['name' => $data['name']],
                     [
@@ -43,8 +44,8 @@ class ServiceCatalogSeeder extends Seeder
                         'cta' => $data['cta'],
                         'sort_order' => $serviceIndex + 1,
                         'is_active' => true,
-                        'status' => 'draft',
-                        'published_at' => null,
+                        'status' => $isConfirmedForLaunch ? 'published' : 'draft',
+                        'published_at' => $isConfirmedForLaunch ? now() : null,
                         'is_price_published' => false,
                         'price_from' => null,
                         'price_to' => null,

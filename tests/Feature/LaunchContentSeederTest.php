@@ -13,20 +13,21 @@ class LaunchContentSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_launch_catalog_is_complete_and_unconfirmed_content_stays_draft(): void
+    public function test_launch_catalog_publishes_only_explicitly_confirmed_services_and_launch_articles(): void
     {
         $this->seed();
 
         $this->assertSame(5, ServiceCategory::query()->count());
         $this->assertSame(60, Service::query()->count());
-        $this->assertSame(60, Service::query()->where('status', 'draft')->count());
-        $this->assertSame(0, Service::published()->count());
+        $this->assertSame(54, Service::query()->where('status', 'draft')->count());
+        $this->assertSame(6, Service::published()->count());
         $this->assertSame(0, Service::query()->where('is_price_published', true)->count());
-        $this->assertSame(10, Article::query()->where('status', 'draft')->count());
+        $this->assertSame(10, Article::published()->count());
+        $this->assertEqualsCanonicalizing(config('site.launch_services'), Service::published()->pluck('name')->all());
 
         $this->assertDatabaseHas('services', ['name' => 'مظلات سيارات PVC', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'سواتر بديل الخشب WPC', 'status' => 'draft']);
-        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'صيانة وترميم المظلات والسواتر', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'قرميد معدني', 'status' => 'draft']);
     }

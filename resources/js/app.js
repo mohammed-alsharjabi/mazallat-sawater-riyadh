@@ -76,3 +76,23 @@ document.querySelectorAll('.lead-form').forEach((form) => {
         form.classList.add('is-submitting');
     });
 });
+
+document.querySelectorAll('[data-service-accordion]').forEach((accordion) => {
+    accordion.querySelectorAll('[data-accordion-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            const selected = trigger.closest('[data-accordion-item]');
+            accordion.querySelectorAll('[data-accordion-item]').forEach((item) => {
+                const isSelected = item === selected;
+                item.classList.toggle('active', isSelected);
+                item.querySelector('[data-accordion-trigger]')?.setAttribute('aria-expanded', isSelected ? 'true' : 'false');
+                const panel = item.querySelector('.service-accordion-panel');
+                if (panel) panel.hidden = !isSelected;
+            });
+        });
+    });
+});
+
+document.querySelectorAll('[data-before-after]').forEach((comparison) => {
+    const range = comparison.querySelector('[data-before-after-range]');
+    range?.addEventListener('input', () => comparison.style.setProperty('--position', `${range.value}%`));
+});

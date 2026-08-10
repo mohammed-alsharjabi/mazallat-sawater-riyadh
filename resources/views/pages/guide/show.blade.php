@@ -1,7 +1,38 @@
 @extends('layouts.app')
+
 @section('content')
-<x-page-hero :eyebrow="$article->category->name" :title="$article->title" :description="$article->excerpt" />
-<section class="section-block"><div class="article-layout"><article class="prose-content article-body"><p class="article-date">نُشر في {{ $article->published_at->translatedFormat('j F Y') }}</p>{!! nl2br(e($article->body)) !!}</article><aside class="article-aside"><h2>هل تستعد لطلب معاينة؟</h2><p>اجمع موقع المشروع والمقاسات التقريبية وصور المساحة، ثم أرسل الطلب.</p><a class="button button-primary w-full" href="{{ route('quote') }}">طلب معاينة</a>@if($article->services->isNotEmpty())<h3>خدمات مرتبطة</h3><ul>@foreach($article->services as $service)<li><a href="{{ route('services.show',$service->slug) }}">{{ $service->name }}</a></li>@endforeach</ul>@endif</aside></div></section>
-<x-faqs :faqs="$article->faqs" />
-@if($article->relatedArticles->isNotEmpty())<section class="section-block"><div class="container-shell"><x-section-heading title="مقالات مرتبطة" /><div class="articles-grid mt-9">@foreach($article->relatedArticles as $item)<x-article-card :article="$item" />@endforeach</div></div></section>@endif
+<article class="article-reference">
+    <header class="article-reference-hero section-indexed">
+        <div class="container-shell">
+            <nav class="breadcrumbs" aria-label="مسار الصفحة"><a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('guide.index') }}">دليل البناء</a><span>/</span><b aria-current="page">{{ $article->title }}</b></nav>
+            <div class="article-hero-grid">
+                <div class="article-title-block" data-hero-copy><p class="eyebrow">{{ $article->category->name }}</p><h1>{{ $article->title }}</h1><p>{{ $article->excerpt }}</p><div class="article-meta"><span>دليل الاختيار</span><i></i><span>{{ $readingMinutes }} {{ $readingMinutes === 1 ? 'دقيقة' : 'دقائق' }} قراءة</span><i></i><time datetime="{{ $article->published_at?->toDateString() }}">{{ $article->published_at?->translatedFormat('j F Y') }}</time></div></div>
+                @if($articleImage)<div class="article-hero-image technical-image" data-hero-visual><x-responsive-image :image="$articleImage" :alt="$articleImage->alt_text ?: $article->title" variant="gallery" loading="eager" fetchpriority="high" sizes="(max-width: 780px) 100vw, 42vw" /><span class="measure measure-top" aria-hidden="true">تفصيل من معرض الخدمة</span></div>@endif
+            </div>
+        </div>
+    </header>
+
+    <div class="container-shell article-reference-layout">
+        <aside class="article-toc" aria-label="فهرس المحتوى"><strong>في هذا الدليل</strong><ol>@foreach($articleSections as $section)@if($section['title'])<li><a href="#{{ $section['id'] }}"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>{{ $section['title'] }}</a></li>@endif @endforeach</ol></aside>
+        <div class="article-reference-body">
+            @foreach($articleSections as $section)
+                <section id="{{ $section['id'] }}" data-reveal>
+                    @if($section['title'])<div class="article-section-title"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h2>{{ $section['title'] }}</h2></div>@endif
+                    @foreach($section['paragraphs'] as $paragraph)<p>{{ $paragraph }}</p>@endforeach
+                    @if($loop->iteration === 2 && $articleImages->get(1))<figure class="article-inline-image technical-image"><x-responsive-image :image="$articleImages->get(1)" :alt="$articleImages->get(1)->alt_text ?: $article->title" sizes="(max-width: 780px) 100vw, 62vw" /><figcaption>{{ $articleImages->get(1)->caption ?: $articleImages->get(1)->title }}</figcaption></figure>@endif
+                </section>
+            @endforeach
+
+            @if($article->services->isNotEmpty())
+                <aside class="article-service-cta" data-reveal><div><p class="eyebrow">أعمال مرتبطة بهذا الدليل</p><h2>شاهد الخدمات قبل طلب العرض</h2></div><div>@foreach($article->services->take(3) as $service)<a href="{{ route('services.show', $service->slug) }}">{{ $service->name }} <span>←</span></a>@endforeach</div></aside>
+            @endif
+        </div>
+    </div>
+</article>
+
+@if($article->faqs->isNotEmpty())<x-faqs :faqs="$article->faqs" />@endif
+
+@if($article->relatedArticles->isNotEmpty())<section class="section-block editorial-reference section-indexed" data-reveal><div class="container-shell"><div class="section-row"><div><p class="eyebrow">أكمل القراءة</p><h2>مقالات وخدمات مرتبطة</h2></div></div><div class="editorial-reference-grid">@foreach($article->relatedArticles as $item)<x-article-card :article="$item" />@endforeach</div></div></section>@endif
+
+<section class="article-contact-strip"><div class="container-shell"><div><p class="eyebrow">لديك مقاسات أو صور؟</p><h2>أرسل تفاصيل موقعك قبل طلب العرض</h2></div><a class="button button-primary" href="{{ route('quote') }}">ابدأ الطلب</a></div></section>
 @endsection

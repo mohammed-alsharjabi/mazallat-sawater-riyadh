@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\Testimonial;
 use App\Models\TrustItem;
+use App\Support\ArticleContent;
 use App\Support\Seo;
 use Illuminate\Contracts\View\View;
 
@@ -19,24 +20,36 @@ class PageController extends Controller
 {
     public function home(): View
     {
-        $popularServices = Service::published()->with('category')->where('is_popular', true)->orderByDesc('published_at')->limit(6)->get();
-        $categories = ServiceCategory::query()->where('is_active', true)->with(['services' => fn ($q) => $q->published()->limit(4)])->withCount(['services' => fn ($q) => $q->published()])->orderBy('sort_order')->get();
+        $launchOrder = array_flip(config('site.launch_services', []));
+        $featuredServices = Service::published()
+            ->whereIn('name', config('site.launch_services', []))
+            ->with([
+                'category',
+                'images' => fn ($query) => $query->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(8),
+            ])
+            ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
+            ->get()
+            ->sortBy(fn (Service $service): int => $launchOrder[$service->name] ?? 999)
+            ->values();
+        $heroService = $featuredServices->firstWhere('name', 'مظلات شد إنشائي') ?: $featuredServices->first();
+        $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
         $areas = Area::published()->withCount(['projects' => fn ($q) => $q->published()])->orderByDesc('is_primary')->orderBy('name')->limit(8)->get();
-        $projects = Project::published()->with(['service', 'area', 'images'])->orderByDesc('is_featured')->latest('published_at')->limit(9)->get();
-        $heroProject = Project::published()->whereHas('images')->with(['service', 'area', 'images'])->orderByDesc('is_featured')->latest('published_at')->first();
+        $projects = Project::published()->with(['service', 'area', 'images'])->orderByDesc('is_featured')->latest('published_at')->limit(6)->get();
         $beforeAfterProject = Project::published()->whereHas('images', fn ($query) => $query->where('stage', 'before'))->whereHas('images', fn ($query) => $query->where('stage', 'after'))->with(['service', 'area', 'images'])->latest('published_at')->first();
-        $materials = Material::query()->where('is_active', true)->whereHas('services', fn ($q) => $q->published())->withCount(['services' => fn ($q) => $q->published()])->orderBy('name')->limit(6)->get();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $faqs = Faq::query()->where('is_active', true)->where(function ($query) {
             $query->whereHas('services', fn ($q) => $q->published())
                 ->orWhereHas('articles', fn ($q) => $q->published())
                 ->orWhereHas('areas', fn ($q) => $q->published());
         })->orderBy('sort_order')->limit(6)->get();
-        $articles = Article::published()->with('category')->latest('published_at')->limit(3)->get();
-        $testimonials = Testimonial::query()->where('is_approved', true)->with('area')->latest()->limit(6)->get();
+        $articles = Article::published()->whereHas('services', fn ($query) => $query->published())->with([
+            'category',
+            'services' => fn ($query) => $query->published()->with(['images' => fn ($images) => $images->where('processing_status', 'processed')->orderByDesc('is_cover')->limit(1)]),
+        ])->latest('published_at')->limit(3)->get();
+        $testimonials = Testimonial::query()->where('is_approved', true)->with(['area', 'project'])->latest()->limit(3)->get();
         $seo = Seo::page('مظلات وسواتر الرياض | طلب معاينة وتركيب داخل الرياض', 'خدمات مظلات وسواتر داخل مدينة الرياض. تعرّف على الخيارات والخامات واطلب معاينة وعرض سعر عبر الاتصال أو واتساب.');
 
-        return view('pages.home', compact('popularServices', 'categories', 'areas', 'projects', 'heroProject', 'beforeAfterProject', 'materials', 'trustItems', 'faqs', 'articles', 'testimonials', 'seo'));
+        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'areas', 'projects', 'beforeAfterProject', 'trustItems', 'faqs', 'articles', 'testimonials', 'seo'));
     }
 
     public function about(): View
@@ -74,13 +87,15 @@ class PageController extends Controller
             'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(16),
             'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6),
-            'articles' => fn ($q) => $q->published()->limit(4), 'seo',
+            'articles' => fn ($q) => $q->published()->with('category')->limit(4), 'seo',
         ])->firstOrFail();
-        $related = Service::published()->where('service_category_id', $service->service_category_id)->whereKeyNot($service->id)->limit(3)->get();
+        $related = Service::published()->whereKeyNot($service->id)->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->limit(1)])
+            ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(4)->get();
         $areas = Area::published()->orderByDesc('is_primary')->orderBy('name')->get();
+        $testimonials = Testimonial::query()->where('is_approved', true)->whereHas('project', fn ($query) => $query->where('service_id', $service->id)->published())->with(['area', 'project'])->latest()->limit(3)->get();
         $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]), [Seo::faqSchema($service->faqs)]);
 
-        return view('pages.services.show', compact('service', 'related', 'areas', 'seo'));
+        return view('pages.services.show', compact('service', 'related', 'areas', 'testimonials', 'seo'));
     }
 
     public function projects(): View
@@ -129,12 +144,22 @@ class PageController extends Controller
         return view('pages.guide.index', compact('articles', 'categories', 'seo'));
     }
 
-    public function article(string $slug): View
+    public function article(string $slug, ArticleContent $content): View
     {
-        $article = Article::published()->where('slug', $slug)->with(['category', 'services', 'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'), 'relatedArticles' => fn ($q) => $q->published()->limit(4), 'seo'])->firstOrFail();
+        $article = Article::published()->where('slug', $slug)->with([
+            'category',
+            'services' => fn ($query) => $query->published()->with(['category', 'images' => fn ($images) => $images->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(4)]),
+            'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+            'relatedArticles' => fn ($q) => $q->published()->with('category')->limit(4),
+            'seo',
+        ])->firstOrFail();
+        $articleSections = $content->sections($article->body);
+        $readingMinutes = $content->readingMinutes($article->body);
+        $articleImages = $article->services->flatMap->images->unique('id')->values();
+        $articleImage = $articleImages->firstWhere('is_cover', true) ?: $articleImages->first();
         $seo = Seo::page($article->title, $article->excerpt ?: 'مقال من دليل المظلات والسواتر.', $article, $this->crumbs(['الدليل' => route('guide.index'), $article->title => url()->current()]), [Seo::faqSchema($article->faqs)]);
 
-        return view('pages.guide.show', compact('article', 'seo'));
+        return view('pages.guide.show', compact('article', 'articleSections', 'readingMinutes', 'articleImages', 'articleImage', 'seo'));
     }
 
     public function prices(): View

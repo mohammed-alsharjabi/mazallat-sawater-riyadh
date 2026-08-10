@@ -1,9 +1,13 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar-SA" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#121820">
+    @php
+        $themePalette = app(\App\Support\ThemePalette::class);
+        $themeValues = $themePalette->fromSettings($siteSettings);
+    @endphp
+    <meta name="theme-color" content="{{ $themeValues['--color-primary'] }}">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <title>{{ $seo['title'] ?? $siteSettings['site_name'] }}</title>
     <meta name="description" content="{{ $seo['description'] ?? '' }}">
@@ -19,7 +23,9 @@
     <meta property="og:title" content="{{ $seo['og_title'] ?? ($seo['title'] ?? $siteSettings['site_name']) }}">
     <meta property="og:description" content="{{ $seo['og_description'] ?? ($seo['description'] ?? '') }}">
     <meta property="og:url" content="{{ $seo['canonical'] ?? url()->current() }}">
-    @php($socialImage = !empty($seo['og_image']) ? (\Illuminate\Support\Str::startsWith($seo['og_image'], ['http://','https://']) ? $seo['og_image'] : asset('storage/'.$seo['og_image'])) : null)
+    @php
+        $socialImage = !empty($seo['og_image']) ? (\Illuminate\Support\Str::startsWith($seo['og_image'], ['http://','https://']) ? $seo['og_image'] : asset('storage/'.$seo['og_image'])) : null;
+    @endphp
     @if($socialImage)<meta property="og:image" content="{{ $socialImage }}"><meta property="og:image:alt" content="{{ $seo['og_title'] ?? ($seo['title'] ?? $siteSettings['site_name']) }}">@endif
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $seo['og_title'] ?? ($seo['title'] ?? $siteSettings['site_name']) }}">
@@ -30,6 +36,7 @@
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $siteSettings['ga_measurement_id'] }}"></script>
         <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',@js($siteSettings['ga_measurement_id']),{'anonymize_ip':true});</script>
     @endif
+    <style id="theme-palette">{!! $themePalette->css($siteSettings) !!}</style>
     <script>document.documentElement.classList.add('js')</script>
     @vite(['resources/css/app.css','resources/js/app.js'])
     @stack('head')
@@ -37,12 +44,18 @@
         @if($schema)<script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP) !!}</script>@endif
     @endforeach
 </head>
-<body class="bg-stone-50 text-stone-900 antialiased">
+<body>
     <a href="#main-content" class="skip-link">انتقل إلى المحتوى</a>
     @include('partials.header')
     <main id="main-content">@yield('content')</main>
     @include('partials.footer')
-    <a class="floating-whatsapp" href="{{ $siteSettings['whatsapp_url'] }}" aria-label="تواصل عبر واتساب" rel="noopener" target="_blank"><span aria-hidden="true">واتساب</span></a>
+    @php
+        $currentWhatsapp = $siteSettings['whatsapp_url'];
+        if (request()->routeIs('services.show') && isset($service) && $service instanceof \App\Models\Service) {
+            $currentWhatsapp .= '?text='.rawurlencode('مرحبًا، أود الاستفسار عن خدمة '.$service->name.' في الرياض: '.route('services.show', $service->slug));
+        }
+    @endphp
+    <a class="floating-whatsapp" href="{{ $currentWhatsapp }}" aria-label="تواصل عبر واتساب" rel="noopener" target="_blank"><span aria-hidden="true">واتساب</span></a>
     @include('partials.mobile-actions')
     @stack('scripts')
 </body>

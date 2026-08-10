@@ -20,9 +20,9 @@ class BusinessSettingsSeeder extends Seeder
             ['country', 'المملكة العربية السعودية', 'الدولة'],
             ['locale', 'ar_SA', 'اللغة والمنطقة'],
             ['primary_service_area', 'وسط الرياض', 'موقع النشاط الأساسي'],
-            ['hero_eyebrow', 'حلول تظليل وخصوصية داخل الرياض', 'عبارة Hero العلوية'],
-            ['hero_title', 'مظلات وسواتر الرياض بتصاميم عصرية وتنفيذ احترافي', 'عنوان Hero'],
-            ['hero_description', 'خدمات المظلات والسواتر والإنشاءات المعدنية تبدأ بفهم الموقع والمقاسات وتنتهي بعرض واضح لنطاق العمل.', 'وصف Hero'],
+            ['hero_eyebrow', 'حلول هندسية للمساحات الخارجية', 'عبارة Hero العلوية'],
+            ['hero_title', 'نصمم الظل كجزء من المكان', 'عنوان Hero'],
+            ['hero_description', 'مظلات وسواتر وهياكل مصممة لمناخ الرياض ومساحة مشروعك.', 'وصف Hero'],
             ['inspection_cta_label', 'اطلب معاينة', 'نص زر المعاينة'],
         ];
 
@@ -45,6 +45,16 @@ class BusinessSettingsSeeder extends Seeder
                 'value' => $value,
                 'label' => $label,
                 'group' => 'seo',
+                'type' => 'string',
+                'is_public' => true,
+            ]);
+        }
+
+        foreach (config('theme.colors', []) as $key => $definition) {
+            Setting::query()->firstOrCreate(['key' => $key], [
+                'value' => $definition['default'],
+                'label' => $definition['label'],
+                'group' => 'appearance',
                 'type' => 'string',
                 'is_public' => true,
             ]);

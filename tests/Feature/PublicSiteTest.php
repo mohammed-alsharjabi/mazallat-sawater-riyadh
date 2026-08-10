@@ -32,7 +32,7 @@ class PublicSiteTest extends TestCase
     {
         $response = $this->get(route('home'));
         $response->assertOk()
-            ->assertSee('<html lang="ar" dir="rtl">', false)
+            ->assertSee('<html lang="ar-SA" dir="rtl">', false)
             ->assertSee('مظلات سيارات')
             ->assertSee('tel:+966562066426', false)
             ->assertSee('https://wa.me/966562066426', false)

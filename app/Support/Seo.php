@@ -146,9 +146,12 @@ final class Seo
                 }
             }
         } elseif ($model instanceof Article) {
-            $schemas[] = ['@context' => 'https://schema.org', '@type' => 'Article', 'headline' => $model->title, 'description' => $model->excerpt, 'datePublished' => $model->published_at?->toAtomString(), 'dateModified' => $model->updated_at?->toAtomString(), 'mainEntityOfPage' => route('guide.show', $model->slug), 'author' => ['@id' => url('/').'#organization'], 'publisher' => ['@id' => url('/').'#organization']];
+            $articleImage = self::articleServiceImage($model);
+            $schemas[] = array_filter(['@context' => 'https://schema.org', '@type' => 'Article', 'headline' => $model->title, 'description' => $model->excerpt, 'datePublished' => $model->published_at?->toAtomString(), 'dateModified' => $model->updated_at?->toAtomString(), 'mainEntityOfPage' => route('guide.show', $model->slug), 'author' => ['@id' => url('/').'#organization'], 'publisher' => ['@id' => url('/').'#organization'], 'image' => $model->featured_image ? asset('storage/'.$model->featured_image) : ($articleImage ? asset('storage/'.$articleImage->optimized_path) : null)]);
             if ($model->featured_image) {
                 $schemas[] = self::featuredImageSchema($model, $model->title);
+            } elseif ($articleImage) {
+                $schemas[] = self::serviceImageSchema($articleImage, $articleImage->service);
             }
         } elseif ($model instanceof Project) {
             $schemas[] = ['@context' => 'https://schema.org', '@type' => 'CreativeWork', 'name' => $model->title, 'description' => $model->excerpt, 'url' => route('projects.show', $model->slug), 'locationCreated' => ['@type' => 'Place', 'name' => $model->area->name], 'about' => ['@type' => 'Service', 'name' => $model->service->name]];
@@ -238,8 +241,24 @@ final class Seo
         if ($model instanceof Service && $model->relationLoaded('images')) {
             return $model->images->firstWhere('is_cover', true)?->optimized_path ?: $model->images->first()?->optimized_path ?: $model->featured_image;
         }
+        if ($model instanceof Article) {
+            return $model->featured_image ?: self::articleServiceImage($model)?->optimized_path;
+        }
 
         return $model->featured_image ?? null;
+    }
+
+    private static function articleServiceImage(Article $article): ?ServiceImage
+    {
+        if (! $article->relationLoaded('services')) {
+            return null;
+        }
+
+        return $article->services
+            ->filter(fn (Service $service): bool => $service->relationLoaded('images'))
+            ->flatMap(fn (Service $service) => $service->images)
+            ->sortByDesc('is_cover')
+            ->first();
     }
 
     private static function absoluteImage(string $path): string

@@ -1,8 +1,6 @@
 @props(['service'])
+@php($cardImage = $service->relationLoaded('images') ? ($service->images->firstWhere('is_cover', true) ?: $service->images->first()) : null)
 <article class="content-card service-card">
-    <div class="card-symbol" aria-hidden="true"><span></span><span></span><span></span></div>
-    <p class="card-kicker">{{ $service->category?->name }}</p>
-    <h3><a href="{{ route('services.show',$service->slug) }}">{{ $service->name }}</a></h3>
-    <p>{{ $service->excerpt }}</p>
-    <a class="text-link" href="{{ route('services.show',$service->slug) }}">تفاصيل الخدمة <span aria-hidden="true">←</span></a>
+    @if($cardImage)<a class="card-image" href="{{ route('services.show', $service->slug) }}"><x-responsive-image :image="$cardImage" :alt="$cardImage->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 780px) 100vw, 25vw" /></a>@endif
+    <div class="card-copy"><p class="card-kicker">{{ $service->category?->name }}</p><h3><a href="{{ route('services.show', $service->slug) }}">{{ $service->name }}</a></h3><p>{{ $service->excerpt }}</p><a class="text-link" href="{{ route('services.show', $service->slug) }}">تفاصيل الخدمة <span aria-hidden="true">←</span></a></div>
 </article>

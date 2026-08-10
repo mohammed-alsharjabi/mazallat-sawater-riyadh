@@ -22,8 +22,8 @@ class LaunchArticleSeeder extends Seeder
                 'article_category_id' => $category->id,
                 'excerpt' => $data['excerpt'],
                 'body' => $data['body'],
-                'status' => 'draft',
-                'published_at' => null,
+                'status' => 'published',
+                'published_at' => now(),
             ]);
 
             $article->services()->syncWithoutDetaching(
