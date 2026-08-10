@@ -9,8 +9,8 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/home.js'],
             refresh: true,
             fonts: [
-                bunny('IBM Plex Sans Arabic', {
-                    weights: [400, 500, 600, 700],
+                bunny('Cairo', {
+                    weights: [400, 500, 600, 700, 800, 900],
                 }),
             ],
         }),

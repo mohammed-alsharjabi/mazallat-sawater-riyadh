@@ -5,7 +5,7 @@
 @source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif;
+    --font-sans: 'Cairo', Tahoma, Arial, sans-serif;
     --color-brand-primary: var(--color-primary);
     --color-brand-secondary: var(--color-secondary);
     --color-brand-background: var(--color-background);
