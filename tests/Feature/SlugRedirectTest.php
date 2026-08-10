@@ -12,6 +12,19 @@ class SlugRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_redirects_are_applied_to_paths_without_a_matching_route(): void
+    {
+        Redirect::create([
+            'old_path' => '/booking',
+            'new_path' => '/',
+            'status_code' => 301,
+            'is_active' => true,
+        ]);
+
+        $this->get('/booking')->assertMovedPermanently()->assertRedirect('/');
+        $this->assertSame(1, Redirect::where('old_path', '/booking')->value('hits'));
+    }
+
     public function test_arabic_slugs_are_clean_unique_and_create_301_redirects_when_changed(): void
     {
         $category = ServiceCategory::create(['name' => 'المظلات', 'is_active' => true]);

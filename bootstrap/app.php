@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [HandleLegacyRedirects::class, SecurityHeaders::class]);
+        $middleware->append(HandleLegacyRedirects::class);
+        $middleware->web(append: [SecurityHeaders::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $trustedProxies = array_values(array_filter(explode(',', (string) env('TRUSTED_PROXIES', ''))));
         if ($trustedProxies) {
