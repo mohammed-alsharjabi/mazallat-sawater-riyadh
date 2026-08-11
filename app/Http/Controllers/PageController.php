@@ -25,7 +25,7 @@ class PageController extends Controller
             ->whereIn('name', config('site.launch_services', []))
             ->with([
                 'category',
-                'images' => fn ($query) => $query->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(8),
+                'images' => fn ($query) => $query->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(8),
             ])
             ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
             ->get()
@@ -55,7 +55,7 @@ class PageController extends Controller
         })->orderBy('sort_order')->limit(6)->get();
         $articles = Article::published()->whereHas('services', fn ($query) => $query->published())->with([
             'category',
-            'services' => fn ($query) => $query->published()->with(['images' => fn ($images) => $images->where('processing_status', 'processed')->orderByDesc('is_cover')->limit(1)]),
+            'services' => fn ($query) => $query->published()->with(['images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)]),
         ])->latest('published_at')->limit(3)->get();
         $testimonials = Testimonial::query()->where('is_approved', true)->with(['area', 'project'])->latest()->limit(3)->get();
         $seo = Seo::page('مظلات وسواتر الرياض | طلب معاينة وتركيب داخل الرياض', 'خدمات مظلات وسواتر داخل مدينة الرياض. تعرّف على الخيارات والخامات واطلب معاينة وعرض سعر عبر الاتصال أو واتساب.');
@@ -95,12 +95,12 @@ class PageController extends Controller
     {
         $service = Service::published()->where('slug', $slug)->with([
             'category', 'materials',
-            'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order'),
+            'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order'),
             'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6),
             'articles' => fn ($q) => $q->published()->with('category')->limit(4), 'seo',
         ])->firstOrFail();
-        $related = Service::published()->whereKeyNot($service->id)->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->limit(1)])
+        $related = Service::published()->whereKeyNot($service->id)->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])
             ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(4)->get();
         $areas = Area::published()->orderByDesc('is_primary')->orderBy('name')->get();
         $testimonials = Testimonial::query()->where('is_approved', true)->whereHas('project', fn ($query) => $query->where('service_id', $service->id)->published())->with(['area', 'project'])->latest()->limit(3)->get();
@@ -159,7 +159,7 @@ class PageController extends Controller
     {
         $article = Article::published()->where('slug', $slug)->with([
             'category',
-            'services' => fn ($query) => $query->published()->with(['category', 'images' => fn ($images) => $images->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(4)]),
+            'services' => fn ($query) => $query->published()->with(['category', 'images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(4)]),
             'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'relatedArticles' => fn ($q) => $q->published()->with('category')->limit(4),
             'seo',
