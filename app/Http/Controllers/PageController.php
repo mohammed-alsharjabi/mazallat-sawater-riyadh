@@ -95,7 +95,7 @@ class PageController extends Controller
     {
         $service = Service::published()->where('slug', $slug)->with([
             'category', 'materials',
-            'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order')->limit(16),
+            'images' => fn ($q) => $q->where('processing_status', 'processed')->orderByDesc('is_cover')->orderBy('sort_order'),
             'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6),
             'articles' => fn ($q) => $q->published()->with('category')->limit(4), 'seo',

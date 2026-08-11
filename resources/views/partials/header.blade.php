@@ -1,66 +1,61 @@
 @php
-    $navigationCategories = collect($navServiceCategories)->filter(fn ($category) => !empty($category['services']));
-    $navigationServicesCount = $navigationCategories->sum(fn ($category) => count($category['services']));
+    $navigationCategories = collect($navServiceCategories)->filter(fn ($category) => ! empty($category['services']));
 @endphp
 <header class="site-header" data-header>
-    <div class="header-utility">
-        <div class="container-shell">
-            <p><span aria-hidden="true">●</span>{{ $siteSettings['primary_service_area'] ?? $siteSettings['city'] }}</p>
-            <div>
-                <a href="{{ $siteSettings['whatsapp_url'] }}" target="_blank" rel="noopener">واتساب</a>
-                <a href="{{ $siteSettings['phone_tel'] }}" dir="ltr">{{ $siteSettings['phone_display'] }}</a>
+    <div class="container-shell header-inner">
+        <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
+            <span class="brand-symbol" aria-hidden="true">م</span>
+            <span><strong>{{ $siteSettings['site_name'] }}</strong><small>تنفيذ مظلات وسواتر داخل الرياض</small></span>
+        </a>
+
+        <nav class="desktop-nav" aria-label="التنقل الرئيسي">
+            <a @class(['active' => request()->routeIs('home')]) href="{{ route('home') }}">الرئيسية</a>
+            <div class="services-dropdown">
+                <button type="button" aria-haspopup="true">الخدمات <span aria-hidden="true">⌄</span></button>
+                <div class="services-dropdown-panel">
+                    @foreach($navigationCategories as $category)
+                        <section>
+                            <a class="dropdown-category" href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }}</a>
+                            @foreach($category['services'] as $item)
+                                <a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>
+                            @endforeach
+                        </section>
+                    @endforeach
+                    <a class="dropdown-all" href="{{ route('services.index') }}">عرض جميع الخدمات ←</a>
+                </div>
             </div>
+            <a @class(['active' => request()->routeIs('projects.*')]) href="{{ route('projects.index') }}">المشاريع</a>
+            <a @class(['active' => request()->routeIs('guide.*')]) href="{{ route('guide.index') }}">دليل البناء</a>
+            <a @class(['active' => request()->routeIs('about')]) href="{{ route('about') }}">من نحن</a>
+            <a @class(['active' => request()->routeIs('contact')]) href="{{ route('contact') }}">تواصل معنا</a>
+        </nav>
+
+        <a class="button button-primary header-cta" href="{{ route('quote') }}">اطلب عرض سعر</a>
+        <div class="mobile-header-actions">
+            <a href="{{ $siteSettings['phone_tel'] }}" aria-label="اتصال">☎</a>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-navigation" data-nav-toggle><span></span><span></span><span></span><b class="sr-only">فتح القائمة</b></button>
         </div>
     </div>
-    <div class="header-main">
-        <div class="container-shell header-inner">
-            <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-                <span><strong>{{ $siteSettings['site_name'] }}</strong><small>تنفيذ هندسي للمساحات الخارجية</small></span>
-            </a>
 
-            <nav id="primary-nav" class="primary-nav" aria-label="التنقل الرئيسي" data-nav>
-                <a @class(['active' => request()->routeIs('home')]) href="{{ route('home') }}">الرئيسية</a>
-                <div @class(['nav-mega', 'active' => request()->routeIs('services.*')]) data-mega>
-                    <button type="button" aria-expanded="false" aria-controls="services-mega-menu" data-mega-toggle>
-                        الخدمات <i aria-hidden="true"></i>
-                    </button>
-                    <div id="services-mega-menu" class="mega-menu" data-mega-menu>
-                        <div class="mega-menu-head">
-                            <div><span>دليل الخدمات</span><strong>اختر التصنيف ثم الخدمة المناسبة</strong></div>
-                            <a href="{{ route('services.index') }}">عرض كل الخدمات <span aria-hidden="true">←</span></a>
-                        </div>
-                        <div class="mega-category-grid">
-                            @foreach($navigationCategories as $category)
-                                <section>
-                                    <a class="mega-category-title" href="{{ route('services.category', $category['slug']) }}">
-                                        <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                                        <strong>{{ $category['name'] }}</strong>
-                                    </a>
-                                    <div>
-                                        @foreach($category['services'] as $item)
-                                            <a @class(['active' => request()->routeIs('services.show') && request()->route('slug') === $item['slug']]) href="{{ route('services.show', $item['slug']) }}">
-                                                {{ $item['name'] }} <span aria-hidden="true">←</span>
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </section>
-                            @endforeach
-                        </div>
-                        <div class="mega-menu-foot"><span>{{ $navigationServicesCount }} خدمة منشورة ومراجعة</span><a href="{{ route('quote') }}">لست متأكدًا؟ اطلب معاينة</a></div>
-                    </div>
-                </div>
-                <a @class(['active' => request()->routeIs('projects.*')]) href="{{ route('projects.index') }}">أعمالنا</a>
-                <a @class(['active' => request()->routeIs('guide.*')]) href="{{ route('guide.index') }}">دليل البناء</a>
-                <a @class(['active' => request()->routeIs('about')]) href="{{ route('about') }}">من نحن</a>
-                <a @class(['active' => request()->routeIs('contact')]) href="{{ route('contact') }}">تواصل معنا</a>
-            </nav>
-
-            <a class="button header-cta" href="{{ route('quote') }}"><span>اطلب معاينة</span><i aria-hidden="true">←</i></a>
-            <div class="mobile-header-actions">
-                <a href="{{ $siteSettings['phone_tel'] }}" aria-label="اتصال"><span aria-hidden="true">☎</span></a>
-                <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle><span></span><span></span><span></span><span class="sr-only">فتح القائمة</span></button>
-            </div>
+    <div class="service-shortcuts" aria-label="الخدمات الأساسية">
+        <div class="container-shell">
+            @foreach(collect($navigationCategories)->flatMap(fn ($category) => $category['services'])->take(6) as $item)
+                <a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>
+            @endforeach
         </div>
     </div>
 </header>
+
+<div class="nav-backdrop" data-nav-backdrop hidden></div>
+<aside id="mobile-navigation" class="mobile-drawer" aria-label="قائمة الجوال" aria-hidden="true" data-mobile-drawer>
+    <div class="mobile-drawer-head"><strong>{{ $siteSettings['site_name'] }}</strong><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
+    <nav>
+        <a href="{{ route('home') }}">الرئيسية</a>
+        <details><summary>الخدمات</summary><div>@foreach($navigationCategories as $category)<strong>{{ $category['name'] }}</strong>@foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach @endforeach</div></details>
+        <a href="{{ route('projects.index') }}">المشاريع</a>
+        <a href="{{ route('guide.index') }}">دليل البناء</a>
+        <a href="{{ route('about') }}">من نحن</a>
+        <a href="{{ route('contact') }}">تواصل معنا</a>
+    </nav>
+    <div class="mobile-drawer-actions"><a class="button button-primary" href="{{ route('quote') }}">اطلب عرض سعر</a><a class="button button-outline" href="{{ $siteSettings['whatsapp_url'] }}" target="_blank" rel="noopener">واتساب</a></div>
+</aside>

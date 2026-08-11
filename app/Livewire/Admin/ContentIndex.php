@@ -39,7 +39,10 @@ class ContentIndex extends Component
     {
         $definition = AdminContent::get($this->type);
         $title = $definition['title'];
-        $records = $definition['model']::query()->when($this->search, fn ($q) => $q->where($title, 'like', '%'.$this->search.'%'))->latest()->paginate(20);
+        $query = $definition['model']::query()->when($this->search, fn ($q) => $q->where($title, 'like', '%'.$this->search.'%'));
+        $records = in_array($this->type, ['services', 'service-categories'], true)
+            ? $query->orderBy('sort_order')->orderBy('id')->paginate(20)
+            : $query->latest()->paginate(20);
 
         return view('livewire.admin.content-index', compact('definition', 'records'))->layout('components.layouts.admin', ['title' => $definition['label']]);
     }

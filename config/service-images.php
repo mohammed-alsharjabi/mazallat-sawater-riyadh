@@ -11,6 +11,38 @@ return [
     'avif_quality' => 58,
     'jpeg_quality' => 84,
 
+    'curated_source' => env('SERVICE_IMAGES_DIRECTORY', storage_path('app/assets')),
+    'curated_folders' => [
+        'bytalshar' => [
+            'service' => 'بيوت شعر', 'expected' => 20, 'stem' => 'bayt-shaar-riyadh',
+            'context' => 'بيت شعر خارجي بقماش عازل وواجهات مجهزة',
+            'exclude' => ['yrtfdrt.webp'],
+        ],
+        'hangers' => [
+            'service' => 'هناجر حديد', 'expected' => 7, 'stem' => 'hangar-riyadh',
+            'context' => 'تنفيذ هنجر وهيكل معدني في موقع العمل',
+            'exclude' => ['hangers3.webp'],
+        ],
+        'bargolat' => [
+            'service' => 'برجولات حديد', 'expected' => 15, 'stem' => 'pergola-riyadh',
+            'context' => 'برجولة خارجية بهيكل حديد في حديقة',
+        ],
+        'sandawitshpanel' => [
+            'service' => 'غرف ساندوتش بانل', 'expected' => 7, 'stem' => 'sandwich-panel-riyadh',
+            'context' => 'غرفة ساندوتش بانل خارجية بألواح معزولة',
+        ],
+        'matalatalshdalnshai' => [
+            'service' => 'مظلات شد إنشائي', 'expected' => 24, 'stem' => 'tensile-structure-shade-riyadh',
+            'context' => 'مظلة شد إنشائي بقماش مشدود وهيكل معدني',
+        ],
+        'madtaltpfc' => [
+            'service' => 'مظلات سيارات PVC', 'expected' => 45, 'stem' => 'mazallat-pvc-riyadh',
+            'context' => 'مظلة PVC بقماش عازل وهيكل معدني',
+            // هذه الصورة تظهر سقف PVC مشدودًا بوضوح، وحُفظ مجلدها الأصلي في التقرير.
+            'include' => ['bytalshar/yrtfdrt.webp'],
+        ],
+    ],
+
     /*
      * المطابقة تبدأ باسم المجلد، ثم يمكن للاستثناء البصري الموثق أدناه تغيير
      * الخدمة بحسب بصمة الملف. بهذه الطريقة لا يعتمد القرار على اسم واتساب.
@@ -31,6 +63,7 @@ return [
         'غرف ساندوتش بانل' => 'sandwich-panel-room-riyadh',
         'جلسات شتوية زجاجية' => 'glass-winter-room-riyadh',
         'برجولات حديد' => 'pergola-riyadh',
+        'بيوت شعر' => 'bayt-shaar-riyadh',
     ],
 
     'visual_overrides' => [

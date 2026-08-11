@@ -38,9 +38,9 @@ class PublicSiteTest extends TestCase
             ->assertSee('https://wa.me/966562066426', false)
             ->assertSee('application/ld+json', false)
             ->assertSee('<link rel="canonical"', false)
-            ->assertSee('data-mega-menu', false)
-            ->assertSee('data-service-showcase', false)
-            ->assertSee('اختر التصنيف ثم الخدمة المناسبة');
+            ->assertSee('data-mobile-drawer', false)
+            ->assertSee('services-card-grid', false)
+            ->assertSee('اختر الخدمة وشاهد أعمالها الحقيقية');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
             $this->get(route($route))->assertOk();

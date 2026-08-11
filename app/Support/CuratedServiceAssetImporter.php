@@ -1,0 +1,195 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Service;
+use App\Models\ServiceImage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+
+class CuratedServiceAssetImporter
+{
+    public function __construct(private ServiceImageImportService $images) {}
+
+    public function import(string $source, bool $sync = false, bool $publish = false, bool $queue = false): array
+    {
+        $source = rtrim(realpath($source) ?: $source, DIRECTORY_SEPARATOR);
+        if (! is_dir($source)) {
+            throw new RuntimeException('مجلد الصور غير موجود: '.$source);
+        }
+
+        $manifest = [];
+        $counts = ['processed' => 0, 'queued' => 0, 'duplicate' => 0, 'excluded' => 0, 'failed' => 0];
+        $serviceRows = [];
+
+        foreach (config('service-images.curated_folders', []) as $folder => $mapping) {
+            $service = Service::query()->where('name', $mapping['service'])->first();
+            if (! $service) {
+                throw new RuntimeException('الخدمة غير موجودة في قاعدة البيانات: '.$mapping['service']);
+            }
+
+            if ($publish) {
+                $service->update([
+                    'status' => 'published',
+                    'is_active' => true,
+                    'is_featured' => true,
+                    'sort_order' => array_search($service->name, config('site.launch_services', []), true) + 1,
+                    'published_at' => $service->published_at ?: now(),
+                ]);
+            }
+
+            $files = $this->filesFor($source, $folder, $mapping);
+            $expected = (int) $mapping['expected'];
+            if (count($files) !== $expected) {
+                throw new RuntimeException(sprintf('الخدمة %s: المتوقع %d صورة لكن الاختيار الآمن أعاد %d.', $service->name, $expected, count($files)));
+            }
+
+            $keptHashes = [];
+            foreach ($files as $index => $file) {
+                try {
+                    $sequence = $index + 1;
+                    $details = $this->images->inspect($file);
+                    $relativeSource = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
+                    $result = $this->images->ingest(
+                        $service,
+                        $file,
+                        basename($file),
+                        dirname(str_replace('\\', '/', $relativeSource)),
+                        $mapping['stem'],
+                        $mapping['context'],
+                        $queue,
+                        true,
+                    );
+
+                    /** @var ServiceImage $image */
+                    $image = $result['image'];
+                    if ($image->trashed()) {
+                        $image->restore();
+                    }
+                    $title = $mapping['context'].' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
+                    $image->update([
+                        'sort_order' => $sequence,
+                        'is_cover' => $sequence === 1,
+                        'source_folder' => dirname(str_replace('\\', '/', $relativeSource)),
+                        'original_name' => basename($file),
+                        'title' => $title,
+                        'alt_text' => $mapping['context'].' كما يظهر في موقع التنفيذ في الرياض',
+                        'caption' => 'صورة حقيقية من أعمال '.$service->name.' في الرياض.',
+                    ]);
+                    $keptHashes[] = $details['hash'];
+                    $counts[$result['status']]++;
+                    $manifest[] = $this->row($source, $file, $service, $image, $details, $result['status']);
+                } catch (\Throwable $exception) {
+                    $counts['failed']++;
+                    $manifest[] = [
+                        'original_folder' => $folder,
+                        'linked_service' => $service->name,
+                        'old_name' => basename($file),
+                        'processing_status' => 'failed',
+                        'processing_notes' => $exception->getMessage(),
+                    ];
+                }
+            }
+
+            if ($sync && $counts['failed'] === 0) {
+                ServiceImage::query()
+                    ->where('service_id', $service->id)
+                    ->whereNotIn('content_hash', $keptHashes)
+                    ->get()
+                    ->each->delete();
+            }
+
+            ServiceImage::query()->where('service_id', $service->id)->where('sort_order', '!=', 1)->update(['is_cover' => false]);
+            $serviceRows[] = ['service' => $service->name, 'expected' => $expected, 'imported' => ServiceImage::query()->where('service_id', $service->id)->count()];
+        }
+
+        $used = collect($manifest)->pluck('source_path')->filter()->all();
+        foreach ($this->allImages($source) as $file) {
+            $relative = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
+            if (! in_array($relative, $used, true)) {
+                $counts['excluded']++;
+                $manifest[] = [
+                    'source_path' => $relative,
+                    'original_folder' => dirname(str_replace('\\', '/', $relative)),
+                    'linked_service' => null,
+                    'old_name' => basename($file),
+                    'processing_status' => 'excluded',
+                    'processing_notes' => 'ملف زائد عن العدد المؤكد أو لا يثبت الخدمة بصريًا؛ لم يُنشر.',
+                ];
+            }
+        }
+
+        $payload = [
+            'source_directory' => $source,
+            'generated_at' => now()->toAtomString(),
+            'counts' => $counts,
+            'services' => $serviceRows,
+            'items' => $manifest,
+        ];
+        $manifestPath = 'service-image-imports/curated-assets-'.now()->format('Ymd-His').'.json';
+        Storage::disk('local')->put($manifestPath, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        $payload['manifest_path'] = storage_path('app/private/'.$manifestPath);
+
+        return $payload;
+    }
+
+    private function filesFor(string $source, string $folder, array $mapping): array
+    {
+        $folderPath = $source.DIRECTORY_SEPARATOR.$folder;
+        if (! is_dir($folderPath)) {
+            throw new RuntimeException('المجلد المطلوب غير موجود: '.$folderPath);
+        }
+
+        $excluded = $mapping['exclude'] ?? [];
+        $files = array_values(array_filter($this->allImages($folderPath), fn (string $path): bool => ! in_array(basename($path), $excluded, true)));
+        foreach ($mapping['include'] ?? [] as $relative) {
+            $path = $source.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relative);
+            if (! is_file($path)) {
+                throw new RuntimeException('ملف الاستثناء البصري غير موجود: '.$relative);
+            }
+            $files[] = $path;
+        }
+        usort($files, fn (string $a, string $b): int => strnatcasecmp(basename($a), basename($b)));
+
+        return array_values(array_unique($files));
+    }
+
+    private function allImages(string $directory): array
+    {
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        $files = collect(File::allFiles($directory))
+            ->filter(fn (\SplFileInfo $file): bool => in_array(mb_strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'avif'], true))
+            ->map(fn (\SplFileInfo $file): string => $file->getRealPath())
+            ->values()
+            ->all();
+        usort($files, 'strnatcasecmp');
+
+        return $files;
+    }
+
+    private function row(string $source, string $file, Service $service, ServiceImage $image, array $details, string $status): array
+    {
+        $relative = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
+
+        return [
+            'source_path' => $relative,
+            'original_folder' => dirname(str_replace('\\', '/', $relative)),
+            'linked_service' => $service->name,
+            'old_name' => basename($file),
+            'new_name' => $image->file_name,
+            'title' => $image->title,
+            'alt_text' => $image->alt_text,
+            'caption' => $image->caption,
+            'dimensions_before' => $details['width'].'x'.$details['height'],
+            'dimensions_after' => $image->width.'x'.$image->height,
+            'size_before' => $details['size'],
+            'size_after' => $image->file_size,
+            'processing_status' => $status,
+            'processing_notes' => $image->processing_notes,
+        ];
+    }
+}

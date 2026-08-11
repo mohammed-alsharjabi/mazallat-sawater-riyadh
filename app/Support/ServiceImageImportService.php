@@ -45,9 +45,17 @@ class ServiceImageImportService
         ?string $stem = null,
         ?string $context = null,
         bool $queue = false,
+        bool $scopeDuplicateToService = false,
     ): array {
         $details = $this->inspect($absolutePath);
-        $duplicate = ServiceImage::withTrashed()->where('content_hash', $details['hash'])->first();
+        // Curated folder imports may scope duplicate detection to the service because
+        // the same supplied asset can intentionally occur in two source folders.
+        // Ordinary uploads and ZIP imports still reject duplicates globally.
+        $duplicateQuery = ServiceImage::withTrashed()->where('content_hash', $details['hash']);
+        if ($scopeDuplicateToService) {
+            $duplicateQuery->where('service_id', $service->id);
+        }
+        $duplicate = $duplicateQuery->first();
         if ($duplicate) {
             return ['status' => 'duplicate', 'image' => $duplicate, 'details' => $details];
         }
@@ -120,6 +128,7 @@ class ServiceImageImportService
             'غرف ساندوتش بانل' => 'غرفة خارجية مصنوعة من ألواح ساندوتش بانل',
             'جلسات شتوية زجاجية' => 'جلسة شتوية خارجية بواجهات زجاجية',
             'برجولات حديد' => 'برجولة خارجية بهيكل حديد',
+            'بيوت شعر' => 'بيت شعر خارجي بقماش عازل وواجهات مجهزة',
             default => 'تفاصيل تنفيذ '.$service->name,
         };
     }

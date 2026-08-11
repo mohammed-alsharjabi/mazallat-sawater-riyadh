@@ -25,9 +25,10 @@ class LaunchContentSeederTest extends TestCase
         $this->assertSame(10, Article::published()->count());
         $this->assertEqualsCanonicalizing(config('site.launch_services'), Service::published()->pluck('name')->all());
 
-        $this->assertDatabaseHas('services', ['name' => 'مظلات سيارات PVC', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'مظلات سيارات PVC', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'سواتر بديل الخشب WPC', 'status' => 'draft']);
-        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'published']);
+        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'بيوت شعر', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'صيانة وترميم المظلات والسواتر', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'قرميد معدني', 'status' => 'draft']);
     }

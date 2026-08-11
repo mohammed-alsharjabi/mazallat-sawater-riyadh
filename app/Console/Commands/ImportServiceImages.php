@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Service;
 use App\Models\ServiceImage;
 use App\Support\ServiceImageImportService;
+use App\Support\CuratedServiceAssetImporter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,9 @@ class ImportServiceImages extends Command
 {
     protected $signature = 'services
         {--zip= : مسار ملف ZIP؛ الافتراضي storage/app/assets.zip}
+        {--source= : استيراد المجلد المنظم storage/app/assets بدل ملف ZIP}
+        {--sync : مزامنة المعرض ليطابق ملفات المصدر المؤكدة فقط}
+        {--publish : نشر الخدمات الست المؤكدة بعد نجاح الاستيراد}
         {--queue : إرسال التحسين إلى Queue بدل تنفيذه فورًا}
         {--reprocess : إعادة معالجة السجلات الفاشلة المطابقة بدل اعتبارها مكررة}
         {--dry-run : فحص وتصنيف وكتابة Manifest دون تغيير قاعدة البيانات}
@@ -28,8 +32,30 @@ class ImportServiceImages extends Command
 
     private array $counts = ['processed' => 0, 'queued' => 0, 'duplicate' => 0, 'failed' => 0, 'unclassified' => 0, 'ignored' => 0];
 
-    public function handle(ServiceImageImportService $importer): int
+    public function handle(ServiceImageImportService $importer, CuratedServiceAssetImporter $curatedImporter): int
     {
+        if ($this->option('source')) {
+            try {
+                $report = $curatedImporter->import(
+                    $this->resolveSourcePath((string) $this->option('source')),
+                    (bool) $this->option('sync'),
+                    (bool) $this->option('publish'),
+                    (bool) $this->option('queue'),
+                );
+                $this->table(['الخدمة', 'المتوقع', 'الموجود'], collect($report['services'])->map(fn ($row) => array_values($row))->all());
+                $this->newLine();
+                $this->info('الإجمالي المرتبط: '.collect($report['services'])->sum('imported').' صورة.');
+                $this->line('المكرر: '.$report['counts']['duplicate'].' — المستبعد: '.$report['counts']['excluded'].' — الفاشل: '.$report['counts']['failed']);
+                $this->line('Manifest: '.$report['manifest_path']);
+
+                return $report['counts']['failed'] > 0 ? self::FAILURE : self::SUCCESS;
+            } catch (Throwable $exception) {
+                $this->error($exception->getMessage());
+
+                return self::FAILURE;
+            }
+        }
+
         $zipPath = $this->resolveZipPath();
         if (! is_file($zipPath)) {
             $this->error('ملف الصور غير موجود: '.$zipPath);
@@ -153,6 +179,15 @@ class ImportServiceImages extends Command
     private function resolveZipPath(): string
     {
         $path = (string) ($this->option('zip') ?: config('service-images.source_zip'));
+        if (! str_starts_with($path, DIRECTORY_SEPARATOR)) {
+            $path = base_path($path);
+        }
+
+        return $path;
+    }
+
+    private function resolveSourcePath(string $path): string
+    {
         if (! str_starts_with($path, DIRECTORY_SEPARATOR)) {
             $path = base_path($path);
         }
