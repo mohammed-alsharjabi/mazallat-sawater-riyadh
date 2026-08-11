@@ -46,6 +46,7 @@ class ServiceImageImportService
         ?string $context = null,
         bool $queue = false,
         bool $scopeDuplicateToService = false,
+        ?int $forcedSequence = null,
     ): array {
         $details = $this->inspect($absolutePath);
         // Curated folder imports may scope duplicate detection to the service because
@@ -72,8 +73,11 @@ class ServiceImageImportService
             throw new RuntimeException('تعذر حفظ النسخة الأصلية الخاصة داخل storage.');
         }
 
-        $image = DB::transaction(function () use ($service, $originalName, $sourceFolder, $stem, $context, $details, $originalPath, $queue): ServiceImage {
-            $sequence = ((int) ServiceImage::withTrashed()->where('service_id', $service->id)->max('sort_order')) + 1;
+        $image = DB::transaction(function () use ($service, $originalName, $sourceFolder, $stem, $context, $details, $originalPath, $queue, $forcedSequence): ServiceImage {
+            $sequence = $forcedSequence ?? (((int) ServiceImage::withTrashed()->where('service_id', $service->id)->max('sort_order')) + 1);
+            if ($sequence < 1) {
+                throw new RuntimeException('ترتيب الصورة يجب أن يبدأ من الرقم 1.');
+            }
             $baseName = $stem.'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
             $context ??= $this->defaultContext($service);
 

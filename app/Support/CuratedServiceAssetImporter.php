@@ -46,9 +46,18 @@ class CuratedServiceAssetImporter
             }
 
             $keptHashes = [];
+            $duplicateFileNames = ServiceImage::query()
+                ->where('service_id', $service->id)
+                ->whereNotNull('file_name')
+                ->selectRaw('file_name, COUNT(*) AS aggregate')
+                ->groupBy('file_name')
+                ->havingRaw('COUNT(*) > 1')
+                ->pluck('file_name')
+                ->all();
             foreach ($files as $index => $file) {
                 try {
                     $sequence = $index + 1;
+                    $expectedName = $mapping['stem'].'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
                     $details = $this->images->inspect($file);
                     $relativeSource = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
                     $result = $this->images->ingest(
@@ -60,12 +69,21 @@ class CuratedServiceAssetImporter
                         $mapping['context'],
                         $queue,
                         true,
+                        $sequence,
                     );
 
                     /** @var ServiceImage $image */
                     $image = $result['image'];
                     if ($image->trashed()) {
                         $image->restore();
+                    }
+                    $mustNormalizeDerivatives = $image->file_name !== $expectedName
+                        || in_array($image->file_name, $duplicateFileNames, true)
+                        || ! Storage::disk('public')->exists('service-images/'.$service->id.'/'.$expectedName);
+                    if ($mustNormalizeDerivatives) {
+                        $image->forceFill(['file_name' => $expectedName])->save();
+                        $image = $this->images->reprocess($image, $queue);
+                        $result['status'] = $queue ? 'queued' : 'processed';
                     }
                     $title = $mapping['context'].' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
                     $image->update([
@@ -101,7 +119,12 @@ class CuratedServiceAssetImporter
             }
 
             ServiceImage::query()->where('service_id', $service->id)->where('sort_order', '!=', 1)->update(['is_cover' => false]);
-            $serviceRows[] = ['service' => $service->name, 'expected' => $expected, 'imported' => ServiceImage::query()->where('service_id', $service->id)->count()];
+            $imported = ServiceImage::query()->where('service_id', $service->id)->count();
+            $uniqueNames = ServiceImage::query()->where('service_id', $service->id)->distinct()->count('file_name');
+            if ($imported !== $expected || $uniqueNames !== $expected) {
+                throw new RuntimeException(sprintf('الخدمة %s: تعذر تثبيت %d اسم صورة فريد (المستوردة %d، الفريدة %d).', $service->name, $expected, $imported, $uniqueNames));
+            }
+            $serviceRows[] = ['service' => $service->name, 'expected' => $expected, 'imported' => $imported];
         }
 
         $used = collect($manifest)->pluck('source_path')->filter()->all();
