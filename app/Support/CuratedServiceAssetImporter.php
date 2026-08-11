@@ -46,6 +46,7 @@ class CuratedServiceAssetImporter
             }
 
             $keptHashes = [];
+            $coverImageId = null;
             $duplicateFileNames = ServiceImage::query()
                 ->where('service_id', $service->id)
                 ->whereNotNull('file_name')
@@ -86,15 +87,21 @@ class CuratedServiceAssetImporter
                         $result['status'] = $queue ? 'queued' : 'processed';
                     }
                     $title = $mapping['context'].' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
+                    $isCover = isset($mapping['cover'])
+                        ? basename($file) === $mapping['cover']
+                        : $sequence === 1;
                     $image->update([
                         'sort_order' => $sequence,
-                        'is_cover' => $sequence === 1,
+                        'is_cover' => $isCover,
                         'source_folder' => dirname(str_replace('\\', '/', $relativeSource)),
                         'original_name' => basename($file),
                         'title' => $title,
                         'alt_text' => $mapping['context'].' كما يظهر في موقع التنفيذ في الرياض',
                         'caption' => 'صورة حقيقية من أعمال '.$service->name.' في الرياض.',
                     ]);
+                    if ($isCover) {
+                        $coverImageId = $image->id;
+                    }
                     $keptHashes[] = $details['hash'];
                     $counts[$result['status']]++;
                     $manifest[] = $this->row($source, $file, $service, $image, $details, $result['status']);
@@ -118,7 +125,11 @@ class CuratedServiceAssetImporter
                     ->each->delete();
             }
 
-            ServiceImage::query()->where('service_id', $service->id)->where('sort_order', '!=', 1)->update(['is_cover' => false]);
+            if (! $coverImageId) {
+                throw new RuntimeException('لم تُعثر صورة الغلاف المحددة لخدمة '.$service->name.'.');
+            }
+            ServiceImage::query()->where('service_id', $service->id)->whereKeyNot($coverImageId)->update(['is_cover' => false]);
+            ServiceImage::query()->whereKey($coverImageId)->update(['is_cover' => true]);
             $imported = ServiceImage::query()->where('service_id', $service->id)->count();
             $uniqueNames = ServiceImage::query()->where('service_id', $service->id)->distinct()->count('file_name');
             if ($imported !== $expected || $uniqueNames !== $expected) {

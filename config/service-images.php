@@ -34,6 +34,7 @@ return [
         'matalatalshdalnshai' => [
             'service' => 'مظلات شد إنشائي', 'expected' => 24, 'stem' => 'tensile-structure-shade-riyadh',
             'context' => 'مظلة شد إنشائي بقماش مشدود وهيكل معدني',
+            'cover' => 'WhatsApp Image 2026-08-09 at 7.28.45 PM.webp',
         ],
         'madtaltpfc' => [
             'service' => 'مظلات سيارات PVC', 'expected' => 45, 'stem' => 'mazallat-pvc-riyadh',
