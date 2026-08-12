@@ -20,47 +20,25 @@ class PageController extends Controller
 {
     public function home(): View
     {
-        $launchOrder = array_flip(config('site.launch_services', []));
+        $homeOrder = array_flip([
+            'مظلات سيارات PVC', 'مظلات شد إنشائي', 'برجولات حديد', 'شبوك وأسوار',
+            'غرف ساندوتش بانل', 'هناجر حديد', 'جلسات شتوية زجاجية', 'بيوت شعر',
+        ]);
         $featuredServices = Service::published()
-            ->whereIn('name', config('site.launch_services', []))
             ->with([
-                'category',
+                'category', 'materials',
                 'images' => fn ($query) => $query->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(8),
             ])
             ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
             ->get()
-            ->sortBy(fn (Service $service): int => $launchOrder[$service->name] ?? 999)
-            ->values();
-        $heroService = $featuredServices->firstWhere('name', 'مظلات شد إنشائي') ?: $featuredServices->first();
-        $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
-        $heroSlides = collect([$heroService])
-            ->filter()
-            ->concat($featuredServices->where('id', '!=', $heroService?->id))
-            ->map(function (Service $service): ?array {
-                $image = $service->images->firstWhere('is_cover', true) ?: $service->images->first();
-
-                return $image ? ['service' => $service, 'image' => $image] : null;
-            })
-            ->filter()
-            ->take(6)
-            ->values();
-        $areas = Area::published()->withCount(['projects' => fn ($q) => $q->published()])->orderByDesc('is_primary')->orderBy('name')->limit(8)->get();
-        $projects = Project::published()->with(['service', 'area', 'images'])->orderByDesc('is_featured')->latest('published_at')->limit(6)->get();
-        $beforeAfterProject = Project::published()->whereHas('images', fn ($query) => $query->where('stage', 'before'))->whereHas('images', fn ($query) => $query->where('stage', 'after'))->with(['service', 'area', 'images'])->latest('published_at')->first();
+            ->sortBy(fn (Service $service): int => $homeOrder[$service->name] ?? 999)
+            ->take(8)->values();
+        $heroService = $featuredServices->firstWhere('name', 'برجولات حديد') ?: $featuredServices->first();
+        $heroImage = $heroService?->images->get(2) ?: ($heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first());
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
-        $faqs = Faq::query()->where('is_active', true)->where(function ($query) {
-            $query->whereHas('services', fn ($q) => $q->published())
-                ->orWhereHas('articles', fn ($q) => $q->published())
-                ->orWhereHas('areas', fn ($q) => $q->published());
-        })->orderBy('sort_order')->limit(6)->get();
-        $articles = Article::published()->whereHas('services', fn ($query) => $query->published())->with([
-            'category',
-            'services' => fn ($query) => $query->published()->with(['images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)]),
-        ])->latest('published_at')->limit(3)->get();
-        $testimonials = Testimonial::query()->where('is_approved', true)->with(['area', 'project'])->latest()->limit(3)->get();
-        $seo = Seo::page('مظلات وسواتر الرياض | طلب معاينة وتركيب داخل الرياض', 'خدمات مظلات وسواتر داخل مدينة الرياض. تعرّف على الخيارات والخامات واطلب معاينة وعرض سعر عبر الاتصال أو واتساب.');
+        $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
 
-        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'heroSlides', 'areas', 'projects', 'beforeAfterProject', 'trustItems', 'faqs', 'articles', 'testimonials', 'seo'));
+        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'trustItems', 'seo'));
     }
 
     public function about(): View

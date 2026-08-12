@@ -39,8 +39,8 @@ class PublicSiteTest extends TestCase
             ->assertSee('application/ld+json', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('data-mobile-drawer', false)
-            ->assertSee('services-card-grid', false)
-            ->assertSee('اختر الخدمة وشاهد أعمالها الحقيقية');
+            ->assertSee('aura-services-grid', false)
+            ->assertSee('حلول متكاملة للمنازل والمشاريع');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
             $this->get(route($route))->assertOk();
