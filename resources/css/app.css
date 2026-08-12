@@ -469,7 +469,7 @@ h3 { color: var(--color-primary); font-size: clamp(1.05rem, 1.8vw, 1.35rem); fon
     .srvc-process-grid p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
     .srvc-process { padding-block: .6rem; }
     .srvc-process .srvc-heading { margin-bottom: .35rem; }
-    .srvc-process-grid { height: 80px; }
+    .srvc-process-grid { height: auto; align-items: start; }
     .srvc-process-icon svg { width: 24px; height: 24px; }
     .srvc-cta { padding-block: .25rem; }
     .srvc-cta-box { min-height: 126px; padding-block: .35rem; }
