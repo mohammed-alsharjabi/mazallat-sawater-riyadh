@@ -95,18 +95,16 @@ class PageController extends Controller
     {
         $service = Service::published()->where('slug', $slug)->with([
             'category', 'materials',
-            'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order'),
-            'faqs' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
-            'projects' => fn ($q) => $q->published()->with(['area', 'images'])->limit(6),
-            'articles' => fn ($q) => $q->published()->with('category')->limit(4), 'seo',
+            'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderBy('sort_order'),
+            'seo',
         ])->firstOrFail();
-        $related = Service::published()->whereKeyNot($service->id)->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])
-            ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(4)->get();
-        $areas = Area::published()->orderByDesc('is_primary')->orderBy('name')->get();
-        $testimonials = Testimonial::query()->where('is_approved', true)->whereHas('project', fn ($query) => $query->where('service_id', $service->id)->published())->with(['area', 'project'])->latest()->limit(3)->get();
-        $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]), [Seo::faqSchema($service->faqs)]);
+        $related = Service::published()->whereKeyNot($service->id)
+            ->whereHas('images', fn ($q) => $q->where('processing_status', 'processed'))
+            ->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])
+            ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(3)->get();
+        $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]));
 
-        return view('pages.services.show', compact('service', 'related', 'areas', 'testimonials', 'seo'));
+        return view('pages.services.show', compact('service', 'related', 'seo'));
     }
 
     public function projects(): View

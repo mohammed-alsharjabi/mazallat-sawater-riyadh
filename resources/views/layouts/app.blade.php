@@ -44,7 +44,7 @@
         @if($schema)<script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP) !!}</script>@endif
     @endforeach
 </head>
-<body>
+<body class="@yield('body-class')">
     <a href="#main-content" class="skip-link">انتقل إلى المحتوى</a>
     @include('partials.header')
     <main id="main-content">@yield('content')</main>

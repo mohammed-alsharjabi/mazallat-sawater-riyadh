@@ -57,7 +57,7 @@ const showLightboxImage = (index) => {
     const caption = lightbox.querySelector('figcaption');
     image.src = item.dataset.lightboxSrc;
     image.alt = item.dataset.lightboxAlt || '';
-    caption.textContent = item.dataset.lightboxAlt || '';
+    caption.textContent = item.dataset.lightboxCaption || item.dataset.lightboxAlt || '';
 };
 
 const setLightbox = (open, index = lightboxIndex) => {
@@ -73,6 +73,27 @@ lightbox?.querySelector('[data-lightbox-close]')?.addEventListener('click', () =
 lightbox?.querySelector('[data-lightbox-prev]')?.addEventListener('click', () => showLightboxImage(lightboxIndex - 1));
 lightbox?.querySelector('[data-lightbox-next]')?.addEventListener('click', () => showLightboxImage(lightboxIndex + 1));
 lightbox?.addEventListener('click', (event) => { if (event.target === lightbox) setLightbox(false); });
+
+document.querySelectorAll('[data-gallery-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const gallery = button.closest('.srvc-shell')?.querySelector('[data-service-gallery]');
+        const extras = [...(gallery?.querySelectorAll('[data-gallery-extra]') || [])];
+        const expanding = extras.some((item) => item.hidden);
+        extras.forEach((item) => {
+            item.hidden = !expanding;
+            item.classList.toggle('is-revealed', expanding);
+        });
+        button.innerHTML = `${expanding ? button.dataset.expandedLabel : button.dataset.collapsedLabel} <span aria-hidden="true">${expanding ? '→' : '←'}</span>`;
+        button.setAttribute('aria-expanded', expanding ? 'true' : 'false');
+    });
+});
+
+document.querySelectorAll('[data-related-carousel]').forEach((carousel) => {
+    const track = carousel.querySelector('[data-related-track]');
+    const move = (direction) => track?.scrollBy({ left: direction * track.clientWidth * .72, behavior: reducedMotion ? 'auto' : 'smooth' });
+    carousel.querySelector('[data-related-prev]')?.addEventListener('click', () => move(1));
+    carousel.querySelector('[data-related-next]')?.addEventListener('click', () => move(-1));
+});
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {

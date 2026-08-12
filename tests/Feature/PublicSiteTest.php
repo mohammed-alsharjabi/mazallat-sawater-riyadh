@@ -62,7 +62,7 @@ class PublicSiteTest extends TestCase
         $article = Article::published()->firstOrFail();
         $this->get(route('services.show', $service->slug))->assertOk()
             ->assertSee($service->name)
-            ->assertSee('نبذة عن الخدمة')
+            ->assertSee('عن الخدمة')
             ->assertSee('اطلب معاينة');
         $this->get(route('areas.show', $area->slug))->assertOk()->assertSee($area->name);
         $this->get(route('guide.show', $article->slug))->assertOk()->assertSee($article->title);
