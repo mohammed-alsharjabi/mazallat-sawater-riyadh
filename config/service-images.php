@@ -39,6 +39,7 @@ return [
         'madtaltpfc' => [
             'service' => 'مظلات سيارات PVC', 'expected' => 45, 'stem' => 'mazallat-pvc-riyadh',
             'context' => 'مظلة PVC بقماش عازل وهيكل معدني',
+            'cover' => 'WhatsApp Image 2026-08-09 at 7.26.33 PM (4).webp',
             // هذه الصورة تظهر سقف PVC مشدودًا بوضوح، وحُفظ مجلدها الأصلي في التقرير.
             'include' => ['bytalshar/yrtfdrt.webp'],
         ],
