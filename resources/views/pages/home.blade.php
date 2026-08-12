@@ -7,7 +7,7 @@
     $primaryService = $homeServices->firstWhere('name', 'مظلات سيارات PVC') ?: $homeServices->first();
     $primaryImage = $primaryService?->images->firstWhere('is_cover', true) ?: $primaryService?->images->first();
     $spotlightService = $homeServices->firstWhere('name', 'مظلات شد إنشائي') ?: $primaryService;
-    $spotlightImage = $spotlightService?->images->get(4) ?: ($spotlightService?->images->firstWhere('is_cover', true) ?: $spotlightService?->images->first());
+    $spotlightImage = $spotlightService?->images->firstWhere('is_cover', true) ?: $spotlightService?->images->first();
     $showcaseServices = collect([$primaryService])->filter()->concat($homeServices->where('id', '!=', $primaryService?->id))->take(5)->values();
     $workServices = $homeServices->filter(fn ($service) => $service->images->isNotEmpty())->take(4)->values();
     $materialServices = $homeServices->filter(fn ($service) => $service->images->isNotEmpty())->take(3)->values();
@@ -78,7 +78,7 @@
         <header class="aura-centered-heading" data-home-reveal><h2>من أعمالنا في الرياض</h2><i aria-hidden="true"></i></header>
         <div class="aura-work-grid" data-home-stagger>
             @foreach($workServices as $service)
-                @php($workImage = $service->images->get(1) ?: ($service->images->firstWhere('is_cover', true) ?: $service->images->first()))
+                @php($workImage = $service->images->firstWhere('is_cover', true) ?: $service->images->first())
                 @if($workImage)
                     <a href="{{ route('services.show', $service->slug) }}" data-mask-reveal>
                         <x-responsive-image :image="$workImage" :alt="$workImage->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 50vw, 46vw" />
@@ -137,7 +137,7 @@
         <header class="aura-centered-heading" data-home-reveal><h2>الخامات والتفاصيل</h2><i aria-hidden="true"></i></header>
         <div class="aura-materials-grid" data-home-stagger>
             @foreach($materialServices as $service)
-                @php($materialImage = $service->images->get(2) ?: $service->images->first())
+                @php($materialImage = $service->images->firstWhere('is_cover', true) ?: $service->images->first())
                 <a href="{{ route('services.show', $service->slug) }}">
                     @if($materialImage)<x-responsive-image :image="$materialImage" :alt="$materialImage->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 33vw, 30vw" />@endif
                     <span><strong>{{ $service->name }}</strong><small>{{ $service->materials->pluck('name')->take(2)->implode(' · ') ?: 'خامات مختارة حسب طبيعة الموقع' }}</small></span>

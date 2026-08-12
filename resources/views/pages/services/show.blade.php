@@ -3,8 +3,9 @@
 @section('body-class', 'service-page-body')
 
 @php
-    $galleryImages = $service->images->sortBy('sort_order')->values();
-    $heroImage = $service->images->firstWhere('is_cover', true) ?: $galleryImages->first();
+    $orderedImages = $service->images->where('processing_status', 'processed')->sortBy('sort_order')->values();
+    $heroImage = $orderedImages->firstWhere('is_cover', true) ?: $orderedImages->first();
+    $galleryImages = collect([$heroImage])->filter()->concat($orderedImages->reject(fn ($image) => $image->id === $heroImage?->id))->values();
     $aboutImage = $galleryImages->first(fn ($image) => $image->id !== $heroImage?->id && ($image->width ?? 0) >= ($image->height ?? 0)) ?: $galleryImages->get(1) ?: $heroImage;
     $lines = fn ($value) => collect(preg_split('/\R/u', (string) $value))->map('trim')->filter()->values();
     $types = $lines($service->types);
@@ -39,13 +40,13 @@
             @if($heroImage)
                 @php($heroLarge = $heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path)
                 <div class="srvc-hero-art" data-reveal>
-                    <button type="button" class="srvc-hero-image" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$heroLarge) }}" data-lightbox-alt="{{ $heroImage->alt_text }}" data-lightbox-caption="{{ $heroImage->caption }}" aria-label="تكبير صورة {{ $service->name }}">
+                        <button type="button" class="srvc-hero-image" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$heroLarge).'?v='.($heroImage->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $heroImage->alt_text }}" data-lightbox-caption="{{ $heroImage->caption }}" aria-label="تكبير صورة {{ $service->name }}">
                         <x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 560px) 100vw, 62vw" />
                     </button>
                 </div>
             @endif
             <div class="srvc-hero-copy" data-reveal>
-                <h1>@if(str_contains($service->name, 'الرياض'))<span>{{ $service->name }}</span>@else<span>{{ $service->name }}</span><span>في الرياض</span>@endif</h1>
+                <h1 class="srvc-page-title">@if(str_contains($service->name, 'الرياض'))<span>{{ $service->name }}</span>@else<span>{{ $service->name }}</span><span>في الرياض</span>@endif</h1>
                 <i class="srvc-title-line" aria-hidden="true"></i>
                 <p>{{ \Illuminate\Support\Str::limit($service->excerpt, 120) }}</p>
                 <div class="srvc-hero-actions">
@@ -64,7 +65,7 @@
                 @foreach($galleryImages as $image)
                     @php($large = $image->variant('gallery')['path'] ?? $image->optimized_path)
                     <figure @if($loop->index >= 6) hidden data-gallery-extra @endif data-reveal>
-                        <button type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$large) }}" data-lightbox-alt="{{ $image->alt_text }}" data-lightbox-caption="{{ $image->caption }}">
+                        <button type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$large).'?v='.($image->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $image->alt_text }}" data-lightbox-caption="{{ $image->caption }}">
                             <x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 50vw, 46vw" />
                             <span class="srvc-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>{{ $siteSettings['city'] }}</span>
                         </button>
@@ -113,7 +114,7 @@
                     @endforeach
                 </div>
             </div>
-            @if($aboutImage)<button class="srvc-about-image" type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.(($aboutImage->variant('gallery')['path'] ?? null) ?: $aboutImage->optimized_path)) }}" data-lightbox-alt="{{ $aboutImage->alt_text }}" data-lightbox-caption="{{ $aboutImage->caption }}" aria-label="تكبير صورة عن {{ $service->name }}" data-reveal><x-responsive-image :image="$aboutImage" :alt="$aboutImage->alt_text ?: $service->name" variant="cover" sizes="(max-width: 560px) 100vw, 38vw" /></button>@endif
+            @if($aboutImage)<button class="srvc-about-image" type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.(($aboutImage->variant('gallery')['path'] ?? null) ?: $aboutImage->optimized_path)).'?v='.($aboutImage->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $aboutImage->alt_text }}" data-lightbox-caption="{{ $aboutImage->caption }}" aria-label="تكبير صورة عن {{ $service->name }}" data-reveal><x-responsive-image :image="$aboutImage" :alt="$aboutImage->alt_text ?: $service->name" variant="cover" sizes="(max-width: 560px) 100vw, 38vw" /></button>@endif
         </div>
     </section>
 

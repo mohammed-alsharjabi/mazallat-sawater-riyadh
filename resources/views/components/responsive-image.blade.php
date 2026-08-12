@@ -9,7 +9,9 @@
     $webpItems = $filter($variants['webp'] ?? []);
     $avifItems = $filter($variants['avif'] ?? []);
     $jpegItems = $filter($variants['jpeg'] ?? []);
-    $srcset = fn($items) => $items->map(fn($item) => asset('storage/'.$item['path']).' '.$item['width'].'w')->implode(', ');
+    $imageVersion = $image->updated_at?->timestamp ?? 1;
+    $versionedAsset = fn($path) => asset('storage/'.$path).'?v='.$imageVersion;
+    $srcset = fn($items) => $items->map(fn($item) => $versionedAsset($item['path']).' '.$item['width'].'w')->implode(', ');
     $webp = $srcset($webpItems);
     $avif = $srcset($avifItems);
     $jpeg = $srcset($jpegItems);
@@ -22,7 +24,7 @@
     <picture>
         @if($avif)<source type="image/avif" srcset="{{ $avif }}" sizes="{{ $sizes }}">@endif
         @if($webp)<source type="image/webp" srcset="{{ $webp }}" sizes="{{ $sizes }}">@endif
-        <img src="{{ asset('storage/'.$path) }}" @if($jpeg ?: $webp) srcset="{{ $jpeg ?: $webp }}" sizes="{{ $sizes }}" @endif alt="{{ $alt ?: ($image->alt_text ?: 'صورة مشروع مظلات وسواتر') }}" width="{{ $width }}" height="{{ $height }}" loading="{{ $loading }}" decoding="async" fetchpriority="{{ $fetchpriority }}">
+        <img src="{{ $versionedAsset($path) }}" @if($jpeg ?: $webp) srcset="{{ $jpeg ?: $webp }}" sizes="{{ $sizes }}" @endif alt="{{ $alt ?: ($image->alt_text ?: 'صورة مشروع مظلات وسواتر') }}" width="{{ $width }}" height="{{ $height }}" loading="{{ $loading }}" decoding="async" fetchpriority="{{ $fetchpriority }}">
     </picture>
     <span class="image-fallback" aria-hidden="true">تعذر تحميل الصورة</span>
 </span>

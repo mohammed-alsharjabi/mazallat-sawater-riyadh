@@ -34,7 +34,7 @@ class PageController extends Controller
             ->sortBy(fn (Service $service): int => $homeOrder[$service->name] ?? 999)
             ->take(8)->values();
         $heroService = $featuredServices->firstWhere('name', 'برجولات حديد') ?: $featuredServices->first();
-        $heroImage = $heroService?->images->get(2) ?: ($heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first());
+        $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
 

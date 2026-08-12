@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view): void {
             $view->with('siteSettings', app(SettingsRepository::class)->public());
         });
-        View::composer('partials.header', function ($view): void {
+        View::composer(['partials.header', 'partials.footer'], function ($view): void {
             $categories = Schema::hasTable('service_categories')
                 ? Cache::remember('navigation.service-categories', now()->addMinutes(20), fn () => ServiceCategory::query()
                     ->where('is_active', true)
