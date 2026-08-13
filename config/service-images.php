@@ -46,11 +46,14 @@ return [
             // هذه الصورة تظهر سقف PVC مشدودًا بوضوح، وحُفظ مجلدها الأصلي في التقرير.
             'include' => ['bytalshar/yrtfdrt.webp'],
         ],
-        'ElectronicShuttersDoors/upscayl_png_upscayl-standard-4x_3x' => [
+        'ElectronicShuttersDoors' => [
             'service' => 'الشترات والأبواب الإلكترونية',
             'expected' => 21,
             'stem' => 'electronic-shutters-doors-riyadh',
             'context' => 'شتر رول وباب إلكتروني لمداخل المباني',
+            // إن وُجد مجلد Upscayl نفضّله، وإلا نستخدم ملفات PNG المحسنة في جذر المجلد.
+            'source_subdirectory' => 'upscayl_png_upscayl-standard-4x_3x',
+            'extensions' => ['png'],
             'cover' => 'WhatsApp Image 2026-08-10 at 6.14.25 PM (1).png',
             'contexts' => [
                 'WhatsApp Image 2026-08-10 at 6.14.21 PM (1).png' => 'شترات رول لمداخل محلات في مبنى قيد الإنشاء',

@@ -176,8 +176,17 @@ class CuratedServiceAssetImporter
             throw new RuntimeException('المجلد المطلوب غير موجود: '.$folderPath);
         }
 
+        $preferredSubdirectory = trim((string) ($mapping['source_subdirectory'] ?? ''), '/\\');
+        $searchPath = $preferredSubdirectory !== '' && is_dir($folderPath.DIRECTORY_SEPARATOR.$preferredSubdirectory)
+            ? $folderPath.DIRECTORY_SEPARATOR.$preferredSubdirectory
+            : $folderPath;
+        $extensions = array_map('mb_strtolower', $mapping['extensions'] ?? ['jpg', 'jpeg', 'png', 'webp', 'avif']);
         $excluded = $mapping['exclude'] ?? [];
-        $files = array_values(array_filter($this->allImages($folderPath), fn (string $path): bool => ! in_array(basename($path), $excluded, true)));
+        $files = array_values(array_filter(
+            $this->allImages($searchPath),
+            fn (string $path): bool => in_array(mb_strtolower(pathinfo($path, PATHINFO_EXTENSION)), $extensions, true)
+                && ! in_array(basename($path), $excluded, true),
+        ));
         foreach ($mapping['include'] ?? [] as $relative) {
             $path = $source.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relative);
             if (! is_file($path)) {

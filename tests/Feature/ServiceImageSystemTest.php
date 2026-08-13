@@ -94,11 +94,12 @@ class ServiceImageSystemTest extends TestCase
 
     public function test_electronic_shutters_service_uses_only_the_curated_enhanced_source_set(): void
     {
-        $mapping = config('service-images.curated_folders.ElectronicShuttersDoors/upscayl_png_upscayl-standard-4x_3x');
+        $mapping = config('service-images.curated_folders.ElectronicShuttersDoors');
 
         $this->assertSame('الشترات والأبواب الإلكترونية', $mapping['service']);
         $this->assertSame(21, $mapping['expected']);
         $this->assertCount(21, $mapping['contexts']);
+        $this->assertSame(['png'], $mapping['extensions']);
         $this->assertStringEndsWith('.png', $mapping['cover']);
     }
 
