@@ -32,10 +32,7 @@
 
 @section('content')
 <div class="service-reference-page">
-    <section class="srvc-hero">
-        <nav class="srvc-breadcrumbs" aria-label="مسار الصفحة">
-            <a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">{{ $service->category->name }}</a><span>/</span><b aria-current="page">{{ $service->name }}</b>
-        </nav>
+    <section class="srvc-hero srvc-hero-architectural">
         <div class="srvc-hero-grid">
             @if($heroImage)
                 @php($heroLarge = $heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path)
@@ -46,12 +43,16 @@
                 </div>
             @endif
             <div class="srvc-hero-copy" data-reveal>
-                <h1 class="srvc-page-title">@if(str_contains($service->name, 'الرياض'))<span>{{ $service->name }}</span>@else<span>{{ $service->name }}</span><span>في الرياض</span>@endif</h1>
-                <i class="srvc-title-line" aria-hidden="true"></i>
+                <nav class="srvc-breadcrumbs" aria-label="مسار الصفحة">
+                    <a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">الخدمات</a><span>/</span><b aria-current="page">{{ $service->name }}</b>
+                </nav>
+                <p class="srvc-category-label">{{ $service->category->name }}</p>
+                <h1 class="srvc-page-title">@if(str_contains($service->name, 'الرياض')){{ $service->name }}@else{{ $service->name }} الرياض@endif</h1>
                 <p>{{ \Illuminate\Support\Str::limit($service->excerpt, 120) }}</p>
+                <div class="srvc-direct-contact"><span>للتواصل والاستفسار</span><a href="{{ $siteSettings['phone_tel'] }}" dir="ltr">{{ $siteSettings['phone_display'] }}</a></div>
                 <div class="srvc-hero-actions">
-                    <a class="srvc-button srvc-button-primary" href="{{ route('quote', ['service' => $service->id]) }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v5h4M10 12h6M10 16h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>اطلب عرض سعر</a>
-                    <a class="srvc-button srvc-button-outline" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.4l1.3-4.7A8.5 8.5 0 1 1 20.5 11.6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.3c.3-.4.7-.3.9.1l1 2c.2.4.1.7-.2 1l-.6.5c.7 1.4 1.8 2.5 3.2 3.2l.5-.6c.3-.3.6-.4 1-.2l2 1c.4.2.5.6.2.9-.5.8-1.3 1.2-2.2 1.1-3.4-.5-6.1-3.2-6.6-6.6-.1-.9.2-1.8.8-2.4Z" fill="currentColor"/></svg>واتساب</a>
+                    <a class="srvc-button srvc-button-primary" href="{{ route('quote', ['service' => $service->id]) }}">اطلب معاينة للموقع</a>
+                    <a class="srvc-button srvc-button-outline" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.4l1.3-4.7A8.5 8.5 0 1 1 20.5 11.6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.3c.3-.4.7-.3.9.1l1 2c.2.4.1.7-.2 1l-.6.5c.7 1.4 1.8 2.5 3.2 3.2l.5-.6c.3-.3.6-.4 1-.2l2 1c.4.2.5.6.2.9-.5.8-1.3 1.2-2.2 1.1-3.4-.5-6.1-3.2-6.6-6.6-.1-.9.2-1.8.8-2.4Z" fill="currentColor"/></svg>تواصل واتساب</a>
                 </div>
             </div>
         </div>
@@ -60,7 +61,7 @@
     @if($galleryImages->isNotEmpty())
     <section class="srvc-section srvc-works" id="works">
         <div class="srvc-shell">
-            <header class="srvc-heading" data-reveal><h2>أعمالنا لنفس الخدمة</h2><i aria-hidden="true"></i></header>
+            <header class="srvc-heading" data-reveal><h2>أعمالنا في خدمة {{ $service->name }} بالرياض</h2><i aria-hidden="true"></i></header>
             <div class="srvc-gallery" data-service-gallery>
                 @foreach($galleryImages as $image)
                     @php($large = $image->variant('gallery')['path'] ?? $image->optimized_path)

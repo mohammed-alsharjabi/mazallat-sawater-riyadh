@@ -22,6 +22,7 @@ return [
             'service' => 'هناجر حديد', 'expected' => 7, 'stem' => 'hangar-riyadh',
             'context' => 'تنفيذ هنجر وهيكل معدني في موقع العمل',
             'exclude' => ['hangers3.webp'],
+            'cover' => 'hangers4.webp',
         ],
         'bargolat' => [
             'service' => 'برجولات حديد', 'expected' => 15, 'stem' => 'pergola-riyadh',

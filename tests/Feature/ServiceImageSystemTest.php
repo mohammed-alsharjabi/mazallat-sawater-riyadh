@@ -144,6 +144,9 @@ class ServiceImageSystemTest extends TestCase
 
         $response = $this->get(route('services.show', $service->slug));
         $response->assertOk()
+            ->assertSee('class="site-header service-design-header"', false)
+            ->assertSee('class="srvc-direct-contact"', false)
+            ->assertSee('أعمالنا في خدمة '.$service->name.' بالرياض')
             ->assertSee('<picture>', false)
             ->assertSee('type="image/avif"', false)
             ->assertSee('srcset=', false)
