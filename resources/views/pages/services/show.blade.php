@@ -64,15 +64,14 @@
             <div class="srvc-gallery" data-service-gallery>
                 @foreach($galleryImages as $image)
                     @php($large = $image->variant('gallery')['path'] ?? $image->optimized_path)
-                    <figure @if($loop->index >= 6) hidden data-gallery-extra @endif data-reveal>
+                    <figure @if($loop->index >= 10) hidden data-gallery-extra @endif data-reveal>
                         <button type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$large).'?v='.($image->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $image->alt_text }}" data-lightbox-caption="{{ $image->caption }}">
-                            <x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 50vw, 46vw" />
-                            <span class="srvc-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>{{ $siteSettings['city'] }}</span>
+                            <x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 48vw, (max-width: 1200px) 24vw, 19vw" />
                         </button>
                     </figure>
                 @endforeach
             </div>
-            @if($galleryImages->count() > 6)
+            @if($galleryImages->count() > 10)
                 <button class="srvc-show-all" type="button" data-gallery-toggle data-collapsed-label="عرض جميع الأعمال" data-expanded-label="عرض الأعمال المختارة">عرض جميع الأعمال <span aria-hidden="true">←</span></button>
             @endif
         </div>

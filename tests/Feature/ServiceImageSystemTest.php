@@ -149,6 +149,7 @@ class ServiceImageSystemTest extends TestCase
             ->assertSee('srcset=', false)
             ->assertSee('fetchpriority="high"', false)
             ->assertSee('loading="lazy"', false)
+            ->assertDontSee('class="srvc-location"', false)
             ->assertSee($cover->alt_text)
             ->assertSee($gallery->caption)
             ->assertSee('"@type":"ImageObject"', false);
