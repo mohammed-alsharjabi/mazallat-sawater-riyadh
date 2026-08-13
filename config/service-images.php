@@ -26,6 +26,8 @@ return [
         'bargolat' => [
             'service' => 'برجولات حديد', 'expected' => 15, 'stem' => 'pergola-riyadh',
             'context' => 'برجولة خارجية بهيكل حديد في حديقة',
+            // صورة محسنة من الدفعة الأخيرة بتكوين رأسي واسع وواضح للـ Hero.
+            'cover' => 'ewerger.webp',
         ],
         'sandawitshpanel' => [
             'service' => 'غرف ساندوتش بانل', 'expected' => 7, 'stem' => 'sandwich-panel-riyadh',

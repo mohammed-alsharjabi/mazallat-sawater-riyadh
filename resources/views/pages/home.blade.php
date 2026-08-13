@@ -19,12 +19,12 @@
     <span class="aura-glow aura-glow-two" aria-hidden="true"></span>
     <div class="aura-home-hero-grid">
         <div class="aura-home-copy" data-aura-copy>
-            <p class="aura-eyebrow">حلول تظليل وتنفيذ احترافي في الرياض</p>
-            <h1>{{ $siteSettings['hero_title'] ?? 'نصمم المساحة التي تستحقها' }}</h1>
-            <p>{{ $siteSettings['hero_description'] ?? 'مظلات وسواتر وبرجولات بتصميم هندسي وتنفيذ يوازن بين الجمال والمتانة.' }}</p>
+            <p class="aura-eyebrow">{{ $siteSettings['hero_eyebrow'] ?? 'هندسة المساحات الخارجية' }}</p>
+            <h1>{{ $siteSettings['hero_title'] ?? 'نصنع الظل الذي يغيّر المكان' }}</h1>
+            <p>{{ $siteSettings['hero_description'] ?? 'مظلات وسواتر وبرجولات بتصميم هندسي وتنفيذ يليق بمشروعك.' }}</p>
             <div class="aura-hero-actions">
-                <a class="aura-button aura-button-primary" href="{{ route('quote') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7zM9 3V1M15 3V1M10 8h4M10 12h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>اطلب معاينة مجانية</a>
-                <a class="aura-button aura-button-outline" href="#home-services">شاهد أعمالنا <span aria-hidden="true">←</span></a>
+                <a class="aura-button aura-button-primary" href="{{ route('quote') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7zM9 3V1M15 3V1M10 8h4M10 12h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>اطلب معاينة لموقعك</a>
+                <a class="aura-button aura-button-outline" href="#home-services">استكشف أعمالنا <span aria-hidden="true">←</span></a>
             </div>
             <p class="aura-assurance"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 4v6c0 5-3.4 8.3-8 10-4.6-1.7-8-5-8-10V6l8-4Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m8.5 12 2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>من التصميم والقياس حتى التنفيذ والتسليم</p>
         </div>
@@ -37,14 +37,13 @@
             </a>
         @endif
     </div>
-</section>
-
-<section class="aura-trust-strip" aria-label="مزايا التنفيذ">
-    <div class="aura-shell">
-        <article><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 6h22v20H5zM9 10h14v12H9zM5 15h4M23 15h4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>تصميم حسب المساحة</span></article>
-        <article><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 3 11 5v8c0 7-5 11-11 14C10 27 5 23 5 16V8l11-5Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m11 16 3 3 7-8" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>خامات مختارة</span></article>
-        <article><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 29c1-7 4-11 9-11s8 4 9 11M16 18v11" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>تنفيذ داخل الرياض</span></article>
-    </div>
+    <section class="aura-trust-strip" aria-label="مزايا التنفيذ">
+        <div class="aura-shell">
+            <article><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 6h22v20H5zM9 10h14v12H9zM5 15h4M23 15h4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>تصميم حسب الموقع</span></article>
+            <article><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 3 11 5v8c0 7-5 11-11 14C10 27 5 23 5 16V8l11-5Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m11 16 3 3 7-8" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>إشراف متخصص</span></article>
+            <article><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 29c1-7 4-11 9-11s8 4 9 11M16 18v11" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>تنفيذ داخل الرياض</span></article>
+        </div>
+    </section>
 </section>
 
 <section id="home-services" class="aura-section aura-services-section">
