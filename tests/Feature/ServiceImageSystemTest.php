@@ -92,6 +92,16 @@ class ServiceImageSystemTest extends TestCase
         Storage::disk('local')->assertExists($originalPath);
     }
 
+    public function test_electronic_shutters_service_uses_only_the_curated_enhanced_source_set(): void
+    {
+        $mapping = config('service-images.curated_folders.ElectronicShuttersDoors/upscayl_png_upscayl-standard-4x_3x');
+
+        $this->assertSame('الشترات والأبواب الإلكترونية', $mapping['service']);
+        $this->assertSame(21, $mapping['expected']);
+        $this->assertCount(21, $mapping['contexts']);
+        $this->assertStringEndsWith('.png', $mapping['cover']);
+    }
+
     public function test_admin_can_manage_sort_cover_metadata_soft_delete_and_restore(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

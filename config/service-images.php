@@ -46,6 +46,36 @@ return [
             // هذه الصورة تظهر سقف PVC مشدودًا بوضوح، وحُفظ مجلدها الأصلي في التقرير.
             'include' => ['bytalshar/yrtfdrt.webp'],
         ],
+        'ElectronicShuttersDoors/upscayl_png_upscayl-standard-4x_3x' => [
+            'service' => 'الشترات والأبواب الإلكترونية',
+            'expected' => 21,
+            'stem' => 'electronic-shutters-doors-riyadh',
+            'context' => 'شتر رول وباب إلكتروني لمداخل المباني',
+            'cover' => 'WhatsApp Image 2026-08-10 at 6.14.25 PM (1).png',
+            'contexts' => [
+                'WhatsApp Image 2026-08-10 at 6.14.21 PM (1).png' => 'شترات رول لمداخل محلات في مبنى قيد الإنشاء',
+                'WhatsApp Image 2026-08-10 at 6.14.21 PM.png' => 'صف من أبواب الشتر الرول لمداخل مبنى',
+                'WhatsApp Image 2026-08-10 at 6.14.22 PM (1).png' => 'أبواب شتر رول متجاورة لمواقف ومداخل خارجية',
+                'WhatsApp Image 2026-08-10 at 6.14.22 PM.png' => 'باب كراج إلكتروني مقطعي بجوار شتر رول',
+                'WhatsApp Image 2026-08-10 at 6.14.24 PM.png' => 'آلية شتر رول مفتوح مع صندوق التحكم الجانبي',
+                'WhatsApp Image 2026-08-10 at 6.14.25 PM (1).png' => 'باب شتر رول عريض لمدخل مبنى',
+                'WhatsApp Image 2026-08-10 at 6.14.25 PM.png' => 'شترات رول داخلية متجاورة في ممر خدمات',
+                'WhatsApp Image 2026-08-10 at 6.14.27 PM.png' => 'أبواب شتر رول رمادية لمداخل تجارية',
+                'WhatsApp Image 2026-08-10 at 6.14.28 PM.png' => 'شتر نافذة رول بلون فاتح أثناء الفتح',
+                'WhatsApp Image 2026-08-10 at 6.14.29 PM (1).png' => 'شتر رول أبيض يغطي نافذة خارجية',
+                'WhatsApp Image 2026-08-10 at 6.14.29 PM.png' => 'شتر نافذة أبيض مرفوع جزئيًا',
+                'WhatsApp Image 2026-08-10 at 6.14.31 PM (1).png' => 'شتر حماية خارجي لنافذة صغيرة',
+                'WhatsApp Image 2026-08-10 at 6.14.31 PM.png' => 'شتر رول أبيض لنافذة عريضة',
+                'WhatsApp Image 2026-08-10 at 6.14.32 PM.png' => 'شتر نافذة داخلي مع صندوق علوي ومسارات جانبية',
+                'WhatsApp Image 2026-08-10 at 6.14.53 PM.png' => 'باب شتر رول بلون فاتح لمدخل كراج',
+                'WhatsApp Image 2026-08-10 at 6.14.54 PM.png' => 'باب شتر رول أسود لمدخل خارجي',
+                'WhatsApp Image 2026-08-10 at 6.14.55 PM.png' => 'باب شتر رول أبيض لمدخل سيارة',
+                'WhatsApp Image 2026-08-10 at 6.26.56 PM.png' => 'شتران رول أبيضان لنوافذ واجهة منزل',
+                'WhatsApp Image 2026-08-10 at 6.30.40 PM (1).png' => 'مجموعة شترات رول لمداخل مستودع',
+                'WhatsApp Image 2026-08-10 at 6.30.40 PM (2).png' => 'تركيب شتر رول طويل على واجهة مبنى',
+                'WhatsApp Image 2026-08-10 at 6.30.40 PM.png' => 'شتر شبكي معدني لحماية واجهة خارجية',
+            ],
+        ],
     ],
 
     /*
@@ -69,6 +99,7 @@ return [
         'جلسات شتوية زجاجية' => 'glass-winter-room-riyadh',
         'برجولات حديد' => 'pergola-riyadh',
         'بيوت شعر' => 'bayt-shaar-riyadh',
+        'الشترات والأبواب الإلكترونية' => 'electronic-shutters-doors-riyadh',
     ],
 
     'visual_overrides' => [

@@ -6,6 +6,7 @@ use App\Models\Faq;
 use App\Models\Material;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Support\SeoSuggestionService;
 use Illuminate\Database\Seeder;
 
 class ServiceCatalogSeeder extends Seeder
@@ -72,6 +73,22 @@ class ServiceCatalogSeeder extends Seeder
                         ['answer' => $faqData['answer'], 'sort_order' => $faqIndex + 1, 'is_active' => true],
                     );
                     $service->faqs()->syncWithoutDetaching([$faq->id]);
+                }
+
+                if ($service->name === 'الشترات والأبواب الإلكترونية') {
+                    $suggestions = app(SeoSuggestionService::class)->suggest('services', $service->toArray(), $service);
+                    $service->seo()->firstOrCreate([], [
+                        'meta_title' => 'الشترات والأبواب الإلكترونية في الرياض',
+                        'meta_description' => 'تركيب شترات رول وأبواب إلكترونية للكراجات والمحلات والنوافذ في الرياض، مع معاينة الفتحة واختيار الشرائح والمحرك ووسائل الأمان المناسبة.',
+                        'focus_keyword' => 'الشترات والأبواب الإلكترونية في الرياض',
+                        'related_terms' => "شتر رول الرياض\nأبواب كراج إلكترونية\nشترات نوافذ كهربائية\nمحركات الشترات",
+                        'internal_links' => $suggestions['internal_links'] ?? null,
+                        'canonical_url' => route('services.show', $service->slug),
+                        'robots' => 'index,follow,max-image-preview:large',
+                        'og_title' => 'الشترات والأبواب الإلكترونية في الرياض',
+                        'og_description' => 'شاهد أعمال الشترات والأبواب الإلكترونية وتعرّف على الأنواع والخامات وخطوات المعاينة والتركيب في الرياض.',
+                        'schema_type' => 'Service',
+                    ]);
                 }
             }
         }

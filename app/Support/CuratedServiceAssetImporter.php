@@ -59,6 +59,7 @@ class CuratedServiceAssetImporter
                 try {
                     $sequence = $index + 1;
                     $expectedName = $mapping['stem'].'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
+                    $context = $mapping['contexts'][basename($file)] ?? $mapping['context'];
                     $details = $this->images->inspect($file);
                     $relativeSource = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
                     $result = $this->images->ingest(
@@ -67,7 +68,7 @@ class CuratedServiceAssetImporter
                         basename($file),
                         dirname(str_replace('\\', '/', $relativeSource)),
                         $mapping['stem'],
-                        $mapping['context'],
+                        $context,
                         $queue,
                         true,
                         $sequence,
@@ -86,7 +87,7 @@ class CuratedServiceAssetImporter
                         $image = $this->images->reprocess($image, $queue);
                         $result['status'] = $queue ? 'queued' : 'processed';
                     }
-                    $title = $mapping['context'].' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
+                    $title = $context.' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
                     $isCover = isset($mapping['cover'])
                         ? basename($file) === $mapping['cover']
                         : $sequence === 1;
@@ -96,7 +97,7 @@ class CuratedServiceAssetImporter
                         'source_folder' => dirname(str_replace('\\', '/', $relativeSource)),
                         'original_name' => basename($file),
                         'title' => $title,
-                        'alt_text' => $mapping['context'].' كما يظهر في موقع التنفيذ في الرياض',
+                        'alt_text' => $context.' في موقع التنفيذ في الرياض',
                         'caption' => 'صورة حقيقية من أعمال '.$service->name.' في الرياض.',
                     ]);
                     if ($isCover) {
