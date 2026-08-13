@@ -8,7 +8,8 @@
         $themeValues = $themePalette->fromSettings($siteSettings);
     @endphp
     <meta name="theme-color" content="{{ $themeValues['--color-primary'] }}">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('brand/mazallat-sawater-riyadh-icon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ asset('brand/mazallat-sawater-riyadh-icon.svg') }}">
     <title>{{ $seo['title'] ?? $siteSettings['site_name'] }}</title>
     <meta name="description" content="{{ $seo['description'] ?? '' }}">
     <meta name="robots" content="{{ $seo['robots'] ?? 'index,follow' }}">

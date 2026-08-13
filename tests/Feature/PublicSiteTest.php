@@ -37,6 +37,8 @@ class PublicSiteTest extends TestCase
             ->assertSee('tel:+966562066426', false)
             ->assertSee('https://wa.me/966562066426', false)
             ->assertSee('application/ld+json', false)
+            ->assertSee('brand/mazallat-sawater-riyadh-logo.svg', false)
+            ->assertSee('brand/mazallat-sawater-riyadh-icon.svg', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('data-mobile-drawer', false)
             ->assertSee('aura-services-grid', false)

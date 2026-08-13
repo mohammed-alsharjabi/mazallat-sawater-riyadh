@@ -6,8 +6,8 @@
     <div class="container-shell footer-grid">
         <section class="footer-about" aria-labelledby="footer-brand-title">
             <a href="{{ route('home') }}" class="brand footer-brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-                <span class="footer-brand-symbol"><x-brand-symbol /></span>
-                <span><strong id="footer-brand-title">{{ $siteSettings['site_name'] }}</strong><small>حلول تظليل وإنشاءات خارجية في الرياض</small></span>
+                <x-site-logo class="footer-brand-logo" :alt="$siteSettings['site_name']" />
+                <strong id="footer-brand-title" class="sr-only">{{ $siteSettings['site_name'] }}</strong>
             </a>
             <p>نساعدك على اختيار وتنفيذ الحل المناسب للموقع من خلال معاينة واضحة وخامات ملائمة لطبيعة الاستخدام.</p>
             <a class="footer-quote" href="{{ route('quote') }}">اطلب معاينة لموقعك <span aria-hidden="true">←</span></a>

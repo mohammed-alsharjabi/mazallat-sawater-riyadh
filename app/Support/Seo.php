@@ -80,7 +80,7 @@ final class Seo
             '@id' => url('/').'#organization',
             'name' => $settings['site_name'],
             'url' => url('/'),
-            'logo' => filled($settings['logo_url'] ?? null) ? $settings['logo_url'] : null,
+            'logo' => filled($settings['logo_url'] ?? null) ? $settings['logo_url'] : asset('brand/mazallat-sawater-riyadh-logo.svg'),
             'telephone' => $settings['phone_e164'],
         ]);
     }

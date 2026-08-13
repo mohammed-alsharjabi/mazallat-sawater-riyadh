@@ -5,8 +5,7 @@
 <header class="site-header service-design-header" data-header>
     <div class="service-design-header-inner">
         <a href="{{ route('home') }}" class="service-design-brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-            <span class="service-design-brand-symbol"><x-brand-symbol /></span>
-            <strong>{{ $siteSettings['site_name'] }}</strong>
+            <x-site-logo class="service-design-logo" :alt="$siteSettings['site_name']" />
         </a>
 
         <nav class="service-design-nav" aria-label="التنقل الرئيسي">
@@ -27,8 +26,7 @@
 <header class="site-header" data-header>
     <div class="container-shell header-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-            <span class="brand-symbol"><x-brand-symbol /></span>
-            <span><strong>{{ $siteSettings['site_name'] }}</strong><small>تنفيذ مظلات وسواتر داخل الرياض</small></span>
+            <x-site-logo class="header-brand-logo" :alt="$siteSettings['site_name']" />
         </a>
 
         <nav class="desktop-nav" aria-label="التنقل الرئيسي">
@@ -73,7 +71,7 @@
 
 <div class="nav-backdrop" data-nav-backdrop hidden></div>
 <aside id="mobile-navigation" class="mobile-drawer" aria-label="قائمة الجوال" aria-hidden="true" data-mobile-drawer>
-    <div class="mobile-drawer-head"><strong>{{ $siteSettings['site_name'] }}</strong><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
+    <div class="mobile-drawer-head"><a href="{{ route('home') }}" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية"><x-site-logo class="drawer-brand-logo" :alt="$siteSettings['site_name']" /></a><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
     <nav>
         <a href="{{ route('home') }}">الرئيسية</a>
         <details><summary>الخدمات</summary><div>@foreach($navigationCategories as $category)<strong>{{ $category['name'] }}</strong>@foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach @endforeach</div></details>

@@ -29,7 +29,7 @@
                     </div>
                     <div class="theme-live-preview" style="@foreach($preview as $name => $value){{ $name }}:{{ $value }};@endforeach">
                         <span class="preview-kicker">معاينة مباشرة</span>
-                        <div class="preview-logo"><i></i><strong>مظلات وسواتر الرياض</strong></div>
+                        <div class="preview-logo"><x-site-logo class="preview-brand-logo" :alt="$siteSettings['site_name']" /></div>
                         <h3>نصمم الظل كجزء من المكان</h3>
                         <p>هذه المعاينة تستخدم المتغيرات نفسها التي ستعمل في الموقع.</p>
                         <div><button type="button">ابدأ مشروعك</button><a href="#appearance">رابط ثانوي</a></div>
