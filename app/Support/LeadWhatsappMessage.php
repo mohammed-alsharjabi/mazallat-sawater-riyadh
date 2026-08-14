@@ -8,18 +8,46 @@ class LeadWhatsappMessage
 {
     public static function make(Lead $lead): string
     {
-        $service = $lead->service?->name ?: 'غير محددة';
-        $area = $lead->area ?: 'غير محددة';
-        $size = $lead->area_size ? rtrim(rtrim((string) $lead->area_size, '0'), '.').' م² تقريبًا' : 'غير محددة';
+        $size = $lead->area_size ? rtrim(rtrim((string) $lead->area_size, '0'), '.').' م² تقريبًا' : null;
         $source = $lead->source_url ?: url('/');
+        $contactMethod = $lead->preferred_contact === 'phone' ? 'اتصال هاتفي' : 'واتساب';
 
-        return implode("\n", [
-            'السلام عليكم، أرسلت طلب معاينة من موقع مظلات وسواتر الرياض.',
-            "الخدمة: {$service}",
-            "المنطقة: {$area}",
-            "المساحة: {$size}",
-            "رابط الصفحة: {$source}",
-        ]);
+        $lines = [
+            '*طلب جديد من موقع مظلات وسواتر الرياض*',
+            'رقم الطلب: #'.$lead->id,
+        ];
+
+        if ($lead->name) {
+            $lines[] = 'الاسم: '.$lead->name;
+        }
+
+        $lines[] = 'رقم الجوال: '.$lead->phone;
+
+        if ($lead->service?->name) {
+            $lines[] = 'الخدمة: '.$lead->service->name;
+        }
+
+        if ($lead->area) {
+            $lines[] = 'الحي أو المنطقة: '.$lead->area;
+        }
+
+        if ($size) {
+            $lines[] = 'المساحة: '.$size;
+        }
+
+        $lines[] = 'التواصل المفضل: '.$contactMethod;
+
+        if ($lead->message) {
+            $lines[] = "\n*تفاصيل الطلب:*\n".$lead->message;
+        }
+
+        if (($lead->images_count ?? 0) > 0) {
+            $lines[] = 'الصور المرفوعة: '.$lead->images_count.' (محفوظة في لوحة التحكم)';
+        }
+
+        $lines[] = "\nرابط الصفحة: ".$source;
+
+        return implode("\n", $lines);
     }
 
     public static function url(string $message): string

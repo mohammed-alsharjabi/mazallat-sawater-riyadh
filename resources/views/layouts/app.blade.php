@@ -56,7 +56,6 @@
             $currentWhatsapp .= '?text='.rawurlencode('مرحبًا، أود الاستفسار عن خدمة '.$service->name.' في الرياض: '.route('services.show', $service->slug));
         }
     @endphp
-    <a class="floating-whatsapp" href="{{ $currentWhatsapp }}" aria-label="تواصل عبر واتساب" rel="noopener" target="_blank"><span aria-hidden="true">واتساب</span></a>
     @include('partials.mobile-actions')
     @stack('scripts')
 </body>

@@ -14,7 +14,7 @@
                 <tbody>
                     @forelse($leads as $lead)
                         <tr>
-                            <td><strong>{{ $lead->name }}</strong><small>{{ $lead->area ?: 'منطقة غير محددة' }}</small><small>{{ $lead->area_size ? $lead->area_size.' م² تقريبًا' : 'المساحة غير محددة' }}</small></td>
+                            <td><strong>{{ $lead->name ?: 'عميل بدون اسم' }}</strong><small>{{ $lead->area ?: 'منطقة غير محددة' }}</small><small>{{ $lead->area_size ? $lead->area_size.' م² تقريبًا' : 'المساحة غير محددة' }}</small></td>
                             <td>
                                 <a href="tel:{{ $lead->phone }}" dir="ltr">{{ $lead->phone }}</a>
                                 <small>{{ $lead->preferred_contact === 'whatsapp' ? 'يفضل واتساب' : 'يفضل الاتصال' }}</small>

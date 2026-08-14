@@ -16,7 +16,7 @@ class LeadController extends Controller
 {
     public function store(StoreLeadRequest $request): RedirectResponse
     {
-        $data = $request->safe()->except(['website', 'site_images']);
+        $data = $request->safe()->except(['website', 'site_images', 'submission_channel']);
         $leadDirectory = null;
 
         try {
@@ -27,9 +27,6 @@ class LeadController extends Controller
                     'metadata' => ['user_agent' => mb_substr((string) $request->userAgent(), 0, 500)],
                 ]);
 
-                $lead->load('service');
-                $message = LeadWhatsappMessage::make($lead);
-                $lead->update(['whatsapp_message' => $message]);
                 $leadDirectory = 'leads/'.$lead->id;
 
                 foreach ($request->file('site_images', []) as $image) {
@@ -42,6 +39,9 @@ class LeadController extends Controller
                         'size' => $image->getSize(),
                     ]);
                 }
+
+                $lead->load('service')->loadCount('images');
+                $lead->update(['whatsapp_message' => LeadWhatsappMessage::make($lead)]);
 
                 return $lead;
             });
@@ -59,6 +59,10 @@ class LeadController extends Controller
         }
 
         ProcessNewLead::dispatch($lead->id);
+
+        if ($request->validated('submission_channel') === 'whatsapp') {
+            return redirect()->away(LeadWhatsappMessage::url((string) $lead->whatsapp_message));
+        }
 
         return back()
             ->with('success', 'وصل طلبك بنجاح. سنتواصل معك عبر وسيلة التواصل التي اخترتها.')

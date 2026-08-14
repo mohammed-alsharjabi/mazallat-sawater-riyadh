@@ -76,4 +76,30 @@ class LeadWorkflowTest extends TestCase
             array_values(Lead::STATUS_LABELS)
         );
     }
+
+    public function test_contact_request_accepts_only_phone_and_redirects_to_an_ordered_whatsapp_message(): void
+    {
+        $this->seed();
+        Queue::fake();
+
+        $response = $this->from(route('contact'))->post(route('leads.store'), [
+            'type' => 'contact',
+            'submission_channel' => 'whatsapp',
+            'phone' => '0562066426',
+            'preferred_contact' => 'whatsapp',
+        ]);
+
+        $lead = Lead::firstOrFail();
+
+        $response->assertRedirectContains('https://wa.me/');
+        $this->assertNull($lead->name);
+        $this->assertSame('0562066426', $lead->phone);
+        $this->assertStringContainsString('*طلب جديد من موقع مظلات وسواتر الرياض*', $lead->whatsapp_message);
+        $this->assertStringContainsString('رقم الطلب: #'.$lead->id, $lead->whatsapp_message);
+        $this->assertStringContainsString('رقم الجوال: 0562066426', $lead->whatsapp_message);
+        $this->assertStringContainsString('التواصل المفضل: واتساب', $lead->whatsapp_message);
+        $this->assertStringContainsString(route('contact'), $lead->whatsapp_message);
+        $this->assertStringNotContainsString('غير محددة', $lead->whatsapp_message);
+        Queue::assertPushed(ProcessNewLead::class, fn ($job) => $job->leadId === $lead->id);
+    }
 }

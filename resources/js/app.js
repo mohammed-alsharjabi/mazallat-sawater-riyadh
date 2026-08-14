@@ -109,7 +109,18 @@ document.querySelectorAll('.lead-form').forEach((form) => {
         const button = form.querySelector('button[type="submit"]');
         if (!button || button.disabled) return;
         button.disabled = true;
-        button.textContent = 'جارٍ إرسال الطلب…';
+        button.setAttribute('aria-busy', 'true');
+        button.textContent = form.querySelector('[name="submission_channel"]')?.value === 'whatsapp'
+            ? 'جارٍ تجهيز رسالة واتساب…'
+            : 'جارٍ إرسال الطلب…';
+    });
+
+    const imageInput = form.querySelector('[data-image-input]');
+    const uploadAction = imageInput?.closest('.upload-field')?.querySelector('.upload-action');
+    imageInput?.addEventListener('change', () => {
+        if (!uploadAction) return;
+        const count = imageInput.files?.length || 0;
+        uploadAction.textContent = count ? `تم اختيار ${count} ${count === 1 ? 'صورة' : 'صور'}` : 'اختيار الصور';
     });
 });
 
