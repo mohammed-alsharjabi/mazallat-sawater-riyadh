@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Service;
 use App\Models\ServiceImage;
-use App\Support\ServiceImageImportService;
 use App\Support\CuratedServiceAssetImporter;
+use App\Support\ServiceImageImportService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
