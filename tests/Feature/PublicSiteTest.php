@@ -70,6 +70,28 @@ class PublicSiteTest extends TestCase
         $this->get(route('guide.show', $article->slug))->assertOk()->assertSee($article->title);
     }
 
+    public function test_curated_service_cover_fills_services_without_gallery_images(): void
+    {
+        $service = Service::published()->where('name', 'سواتر حديد')->firstOrFail();
+
+        $this->assertSame(0, $service->images()->count());
+        $this->assertSame('services/sawater-riyadh.webp', $service->featured_image);
+
+        $this->get(route('services.show', $service->slug))->assertOk()
+            ->assertSee('storage/services/sawater-riyadh.webp', false)
+            ->assertSee('class="site-header"', false)
+            ->assertDontSee('service-design-header', false);
+    }
+
+    public function test_about_page_presents_verified_experience_image_and_phone(): void
+    {
+        $this->get(route('about'))->assertOk()
+            ->assertSee('بدأ عملنا في السواتر عام 1999')
+            ->assertSee('مشاريع حكومية ولشركات كبيرة')
+            ->assertSee('+966 56 206 6426')
+            ->assertSee('storage/about/aboutus.webp', false);
+    }
+
     public function test_lead_form_validates_and_queues_follow_up(): void
     {
         Queue::fake();

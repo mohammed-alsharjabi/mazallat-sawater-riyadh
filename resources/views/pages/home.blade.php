@@ -8,7 +8,11 @@
     $primaryImage = $primaryService?->images->firstWhere('is_cover', true) ?: $primaryService?->images->first();
     $spotlightService = $homeServices->firstWhere('name', 'مظلات الشد الإنشائي') ?: $primaryService;
     $spotlightImage = $spotlightService?->images->firstWhere('is_cover', true) ?: $spotlightService?->images->first();
-    $showcaseServices = collect([$primaryService])->filter()->concat($homeServices->where('id', '!=', $primaryService?->id))->take(5)->values();
+    $showcaseServices = collect([$primaryService])->filter()
+        ->concat($homeServices->where('id', '!=', $primaryService?->id))
+        ->unique('service_category_id')
+        ->take(6)
+        ->values();
     $workServices = $homeServices->filter(fn ($service) => $service->images->isNotEmpty())->take(4)->values();
     $materialServices = $homeServices->filter(fn ($service) => $service->images->isNotEmpty())->take(3)->values();
 @endphp
@@ -53,9 +57,9 @@
             @foreach($showcaseServices as $service)
                 @php($cover = $service->images->firstWhere('is_cover', true) ?: $service->images->first())
                 <article @class(['aura-service-card', 'is-featured' => $loop->first]) data-flip-service data-service-name="{{ $service->name }}">
-                    @if($cover)
+                    @if($service->featured_image || $cover)
                         <a class="aura-service-image" href="{{ route('services.show', $service->slug) }}" data-mask-reveal aria-label="عرض {{ $service->name }}">
-                            <x-responsive-image :image="$cover" :alt="$cover->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 100vw, 48vw" />
+                            <x-service-cover :service="$service" :image="$cover" sizes="(max-width: 560px) 100vw, 48vw" />
                         </a>
                     @endif
                     <div class="aura-service-copy">

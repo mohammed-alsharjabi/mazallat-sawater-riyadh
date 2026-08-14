@@ -38,6 +38,11 @@ class LaunchContentSeederTest extends TestCase
             $this->assertSame('Service', $newService->seo()->value('schema_type'));
         }
         $this->assertDatabaseHas('services', ['name' => 'الشترات والأبواب الإلكترونية', 'status' => 'draft']);
+
+        foreach (config('site.service_featured_images') as $serviceName => $path) {
+            $this->assertDatabaseHas('services', ['name' => $serviceName, 'featured_image' => $path]);
+            $this->assertFileExists(storage_path('app/public/'.$path));
+        }
     }
 
     public function test_every_seeded_service_has_the_full_editable_content_template(): void

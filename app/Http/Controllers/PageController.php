@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Area;
 use App\Models\Article;
 use App\Models\ArticleCategory;
-use App\Models\Faq;
 use App\Models\Material;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\ServiceCategory;
-use App\Models\Testimonial;
 use App\Models\TrustItem;
 use App\Support\ArticleContent;
 use App\Support\Seo;
@@ -44,7 +42,7 @@ class PageController extends Controller
 
     public function about(): View
     {
-        $seo = Seo::page('من نحن | مظلات وسواتر الرياض', 'تعرف على طريقة عمل مظلات وسواتر الرياض وخطوات المعاينة وتحديد المتطلبات داخل مدينة الرياض.', null, $this->crumbs(['من نحن' => route('about')]));
+        $seo = Seo::page('من نحن | خبرة في السواتر والمظلات منذ 1999', 'خبرة ميدانية في السواتر والمظلات والإنشاءات الخارجية بالرياض منذ 1999، مع تنفيذ مشاريع حكومية وأعمال لشركات كبيرة.', null, $this->crumbs(['من نحن' => route('about')]));
 
         return view('pages.about', compact('seo'));
     }
@@ -80,7 +78,9 @@ class PageController extends Controller
             'seo',
         ])->firstOrFail();
         $related = Service::published()->whereKeyNot($service->id)
-            ->whereHas('images', fn ($q) => $q->where('processing_status', 'processed'))
+            ->where(fn ($query) => $query
+                ->whereNotNull('featured_image')
+                ->orWhereHas('images', fn ($images) => $images->where('processing_status', 'processed')))
             ->with(['category', 'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])
             ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(3)->get();
         $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]));

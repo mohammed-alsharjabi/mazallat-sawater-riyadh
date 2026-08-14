@@ -8,8 +8,8 @@ use App\Models\Redirect;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Support\SeoSuggestionService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class ServiceCatalogSeeder extends Seeder
 {
@@ -44,6 +44,7 @@ class ServiceCatalogSeeder extends Seeder
 
             foreach ($categoryData['services'] as $serviceIndex => $data) {
                 $isConfirmedForLaunch = in_array($data['name'], config('site.launch_services', []), true);
+                $featuredImage = config('site.service_featured_images.'.$data['name']);
                 $service = Service::query()->firstOrCreate(
                     ['name' => $data['name']],
                     [
@@ -59,6 +60,9 @@ class ServiceCatalogSeeder extends Seeder
                         'price_factors' => $this->lines($data['factors']),
                         'selection_tips' => $this->lines($data['tips']),
                         'cta' => $data['cta'],
+                        'featured_image' => $featuredImage,
+                        'featured_image_alt' => $featuredImage ? $data['name'].' في الرياض' : null,
+                        'featured_image_caption' => $featuredImage ? 'خدمة '.$data['name'].' في الرياض' : null,
                         'sort_order' => $serviceIndex + 1,
                         'is_active' => true,
                         'status' => $isConfirmedForLaunch ? 'published' : 'draft',
@@ -75,6 +79,9 @@ class ServiceCatalogSeeder extends Seeder
                         'status' => 'published',
                         'is_active' => true,
                         'published_at' => $service->published_at ?: now(),
+                        'featured_image' => $featuredImage,
+                        'featured_image_alt' => $data['name'].' في الرياض',
+                        'featured_image_caption' => 'خدمة '.$data['name'].' في الرياض',
                     ]);
                 }
 

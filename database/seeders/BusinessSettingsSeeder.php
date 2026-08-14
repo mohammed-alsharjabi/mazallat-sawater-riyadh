@@ -23,6 +23,7 @@ class BusinessSettingsSeeder extends Seeder
             ['hero_eyebrow', 'هندسة المساحات الخارجية', 'عبارة Hero العلوية'],
             ['hero_title', 'نصنع الظل الذي يغيّر المكان', 'عنوان Hero'],
             ['hero_description', 'مظلات وسواتر وبرجولات بتصميم هندسي وتنفيذ يليق بمشروعك.', 'وصف Hero'],
+            ['about_image', config('site.about_image'), 'صورة من نحن'],
             ['inspection_cta_label', 'اطلب معاينة', 'نص زر المعاينة'],
         ];
 

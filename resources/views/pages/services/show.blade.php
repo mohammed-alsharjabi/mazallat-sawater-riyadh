@@ -7,6 +7,8 @@
     $heroImage = $orderedImages->firstWhere('is_cover', true) ?: $orderedImages->first();
     $galleryImages = collect([$heroImage])->filter()->concat($orderedImages->reject(fn ($image) => $image->id === $heroImage?->id))->values();
     $aboutImage = $galleryImages->first(fn ($image) => $image->id !== $heroImage?->id && ($image->width ?? 0) >= ($image->height ?? 0)) ?: $galleryImages->get(1) ?: $heroImage;
+    $hasHeroVisual = filled($service->featured_image) || $heroImage;
+    $heroInsetImage = $service->featured_image ? $heroImage : ($aboutImage?->id !== $heroImage?->id ? $aboutImage : null);
     $lines = fn ($value) => collect(preg_split('/\R/u', (string) $value))->map('trim')->filter()->values();
     $types = $lines($service->types);
     $useCases = $lines($service->use_cases);
@@ -33,13 +35,23 @@
 @section('content')
 <div class="service-reference-page">
     <section class="srvc-hero srvc-hero-architectural">
-        <div @class(['srvc-hero-grid', 'has-no-image' => ! $heroImage])>
-            @if($heroImage)
-                @php($heroLarge = $heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path)
+        <div @class(['srvc-hero-grid', 'has-no-image' => ! $hasHeroVisual])>
+            @if($hasHeroVisual)
+                @php
+                    $heroLarge = $heroImage ? ($heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path) : null;
+                    $mainHeroSrc = $service->featured_image ? asset('storage/'.$service->featured_image) : asset('storage/'.$heroLarge);
+                    $mainHeroAlt = $service->featured_image_alt ?: ($heroImage?->alt_text ?: $service->name.' في الرياض');
+                @endphp
                 <div class="srvc-hero-art" data-reveal>
-                        <button type="button" class="srvc-hero-image" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$heroLarge).'?v='.($heroImage->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $heroImage->alt_text }}" data-lightbox-caption="{{ $heroImage->caption }}" aria-label="تكبير صورة {{ $service->name }}">
-                        <x-responsive-image :image="$heroImage" :alt="$heroImage->alt_text ?: $service->name" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 560px) 100vw, 62vw" />
+                    <button type="button" class="srvc-hero-image" data-lightbox-item data-lightbox-src="{{ $mainHeroSrc }}?v={{ $service->updated_at?->timestamp ?? 1 }}" data-lightbox-alt="{{ $mainHeroAlt }}" data-lightbox-caption="{{ $service->featured_image_caption ?: $heroImage?->caption }}" aria-label="تكبير صورة {{ $service->name }}">
+                        <x-service-cover :service="$service" :image="$heroImage" :alt="$mainHeroAlt" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 560px) 100vw, 55vw" />
                     </button>
+                    @if($heroInsetImage)
+                        @php($insetLarge = $heroInsetImage->variant('gallery')['path'] ?? $heroInsetImage->optimized_path)
+                        <button type="button" class="srvc-hero-inset" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$insetLarge).'?v='.($heroInsetImage->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $heroInsetImage->alt_text ?: $service->name }}" data-lightbox-caption="{{ $heroInsetImage->caption }}" aria-label="تكبير صورة أخرى من {{ $service->name }}">
+                            <x-responsive-image :image="$heroInsetImage" :alt="$heroInsetImage->alt_text ?: $service->name" variant="thumbnail" loading="eager" sizes="(max-width: 560px) 42vw, 20vw" />
+                        </button>
+                    @endif
                 </div>
             @endif
             <div class="srvc-hero-copy" data-reveal>
@@ -152,7 +164,7 @@
                         @php($cardImage = $item->images->firstWhere('is_cover', true) ?: $item->images->first())
                         <article data-reveal>
                             <a href="{{ route('services.show', $item->slug) }}">
-                                @if($cardImage)<x-responsive-image :image="$cardImage" :alt="$cardImage->alt_text ?: $item->name" variant="thumbnail" sizes="(max-width: 560px) 72vw, 31vw" />@endif
+                                @if($item->featured_image || $cardImage)<x-service-cover :service="$item" :image="$cardImage" sizes="(max-width: 560px) 72vw, 31vw" />@endif
                                 <h3>{{ $item->name }}</h3>
                             </a>
                         </article>

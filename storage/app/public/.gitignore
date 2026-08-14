@@ -1,2 +1,6 @@
 *
+!about/
+!about/aboutus.webp
+!services/
+!services/*.webp
 !.gitignore

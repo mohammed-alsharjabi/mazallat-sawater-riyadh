@@ -1,37 +1,6 @@
 @php
     $navigationCategories = collect($navServiceCategories)->filter(fn ($category) => ! empty($category['services']));
 @endphp
-@if(request()->routeIs('services.show'))
-<header class="site-header service-design-header" data-header>
-    <div class="service-design-header-inner">
-        <a href="{{ route('home') }}" class="service-design-brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-            <x-site-logo class="service-design-logo" :alt="$siteSettings['site_name']" />
-        </a>
-
-        <nav class="service-design-nav" aria-label="التنقل الرئيسي">
-            <a href="{{ route('home') }}">الرئيسية</a>
-            <div class="service-design-services">
-                <a class="active" href="{{ route('services.index') }}">الخدمات <span aria-hidden="true">⌄</span></a>
-                <div class="service-design-menu">
-                    @foreach($navigationCategories as $category)
-                        <section><a href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }}</a>
-                            @foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach
-                        </section>
-                    @endforeach
-                </div>
-            </div>
-            <a href="{{ route('projects.index') }}">أعمالنا</a>
-            <a href="{{ route('about') }}">من نحن</a>
-        </nav>
-
-        <a class="service-design-contact" href="{{ route('contact') }}">اتصل بنا</a>
-        <div class="service-design-controls">
-            <a class="service-design-phone" href="{{ $siteSettings['phone_tel'] }}" aria-label="اتصال"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.3 3.8 9.6 8c.3.6.2 1.2-.3 1.6l-1.4 1.1a15 15 0 0 0 5.4 5.4l1.1-1.4c.4-.5 1.1-.6 1.6-.3l4.2 2.3c.6.3.9 1 .7 1.7l-.6 2.1c-.2.8-.9 1.3-1.7 1.4C9.8 22.1 1.9 14.2 2.1 5.4c0-.8.6-1.5 1.4-1.7l2.1-.6c.7-.2 1.4.1 1.7.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-            <button class="service-design-toggle" type="button" aria-expanded="false" aria-controls="mobile-navigation" data-nav-toggle><span></span><span></span><span></span><b class="sr-only">فتح القائمة</b></button>
-        </div>
-    </div>
-</header>
-@else
 <header class="site-header" data-header>
     <div class="container-shell header-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
@@ -76,7 +45,6 @@
         </div>
     </div>
 </header>
-@endif
 
 <div class="nav-backdrop" data-nav-backdrop hidden></div>
 <aside id="mobile-navigation" class="mobile-drawer" aria-label="قائمة الجوال" aria-hidden="true" data-mobile-drawer>
