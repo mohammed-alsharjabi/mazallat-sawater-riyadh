@@ -92,6 +92,25 @@ class PublicSiteTest extends TestCase
             ->assertSee('storage/about/aboutus.webp', false);
     }
 
+    public function test_building_guide_has_ten_published_articles_with_visible_images(): void
+    {
+        $articles = Article::published()->get();
+        $response = $this->get(route('guide.index'))->assertOk();
+
+        $this->assertCount(10, $articles);
+        $this->assertSame(10, substr_count($response->getContent(), 'class="article-card"'));
+        $this->assertSame(10, substr_count($response->getContent(), 'class="image-shell article-curated-image'));
+
+        foreach ($articles as $article) {
+            $this->assertNotEmpty($article->featured_image, $article->title.' has no featured image');
+            $response->assertSee('storage/'.$article->featured_image, false);
+        }
+
+        $article = $articles->firstOrFail();
+        $this->get(route('guide.show', $article->slug))->assertOk()
+            ->assertSee('storage/'.$article->featured_image, false);
+    }
+
     public function test_lead_form_validates_and_queues_follow_up(): void
     {
         Queue::fake();

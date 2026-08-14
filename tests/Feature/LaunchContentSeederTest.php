@@ -23,6 +23,7 @@ class LaunchContentSeederTest extends TestCase
         $this->assertSame(14, Service::published()->count());
         $this->assertSame(0, Service::query()->where('is_price_published', true)->count());
         $this->assertSame(10, Article::published()->count());
+        $this->assertSame(10, Article::published()->whereNotNull('featured_image')->count());
         $this->assertEqualsCanonicalizing(config('site.launch_services'), Service::published()->pluck('name')->all());
 
         $this->assertDatabaseHas('services', ['name' => 'مظلات PVC', 'status' => 'published']);
@@ -41,6 +42,11 @@ class LaunchContentSeederTest extends TestCase
 
         foreach (config('site.service_featured_images') as $serviceName => $path) {
             $this->assertDatabaseHas('services', ['name' => $serviceName, 'featured_image' => $path]);
+            $this->assertFileExists(storage_path('app/public/'.$path));
+        }
+
+        foreach (config('site.article_featured_images') as $title => $path) {
+            $this->assertDatabaseHas('articles', ['title' => $title, 'featured_image' => $path]);
             $this->assertFileExists(storage_path('app/public/'.$path));
         }
     }

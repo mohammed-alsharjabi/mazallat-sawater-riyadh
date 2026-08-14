@@ -41,6 +41,18 @@ return [
         'النوافذ' => 'services/shutters-windows-doors-riyadh.webp',
         'الأبواب الكهربائية' => 'services/shutters-windows-doors-riyadh.webp',
     ],
+    'article_featured_images' => [
+        'أسعار مظلات السيارات في الرياض والعوامل التي تحدد التكلفة' => 'services/mazallat-riyadh.webp',
+        'أفضل أنواع مظلات السيارات المناسبة لأجواء الرياض' => 'services/mazallat-riyadh.webp',
+        'الفرق بين مظلات PVC والبولي إيثيلين' => 'services/mazallat-riyadh.webp',
+        'أسعار السواتر في الرياض حسب الخامة والتصميم' => 'services/sawater-riyadh.webp',
+        'سواتر الحديد أم بديل الخشب: كيف تختار؟' => 'services/sawater-riyadh.webp',
+        'أنواع البرجولات المناسبة للحدائق والجلسات الخارجية' => 'services/pergolas-riyadh.webp',
+        'استخدامات الساندوتش بانل في الغرف والملاحق والمستودعات' => 'services/hangars-riyadh.webp',
+        'كيف تختار مقاول مظلات وسواتر في الرياض؟' => 'services/mazallat-riyadh.webp',
+        'متى تحتاج مظلتك إلى صيانة أو تغيير القماش؟' => 'services/mazallat-riyadh.webp',
+        'الفرق بين المظلات المعلقة والهرمية والشد الإنشائي' => 'services/mazallat-riyadh.webp',
+    ],
     'about_image' => 'about/aboutus.webp',
     'fallback' => [
         'site_name' => 'مظلات وسواتر الرياض',

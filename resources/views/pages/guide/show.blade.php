@@ -7,7 +7,7 @@
             <nav class="breadcrumbs" aria-label="مسار الصفحة"><a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('guide.index') }}">دليل البناء</a><span>/</span><b aria-current="page">{{ $article->title }}</b></nav>
             <div class="article-hero-grid">
                 <div class="article-title-block" data-hero-copy><p class="eyebrow">{{ $article->category->name }}</p><h1>{{ $article->title }}</h1><p>{{ $article->excerpt }}</p><div class="article-meta"><span>دليل الاختيار</span><i></i><span>{{ $readingMinutes }} {{ $readingMinutes === 1 ? 'دقيقة' : 'دقائق' }} قراءة</span><i></i><time datetime="{{ $article->published_at?->toDateString() }}">{{ $article->published_at?->translatedFormat('j F Y') }}</time></div></div>
-                @if($articleImage)<div class="article-hero-image technical-image" data-hero-visual><x-responsive-image :image="$articleImage" :alt="$articleImage->alt_text ?: $article->title" variant="gallery" loading="eager" fetchpriority="high" sizes="(max-width: 780px) 100vw, 42vw" /><span class="measure measure-top" aria-hidden="true">تفصيل من معرض الخدمة</span></div>@endif
+                @if($article->featured_image || $articleImage)<div class="article-hero-image technical-image" data-hero-visual><x-article-cover :article="$article" :image="$articleImage" variant="gallery" loading="eager" fetchpriority="high" sizes="(max-width: 780px) 100vw, 42vw" /><span class="measure measure-top" aria-hidden="true">صورة مرتبطة بموضوع المقال</span></div>@endif
             </div>
         </div>
     </header>

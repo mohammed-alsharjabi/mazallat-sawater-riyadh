@@ -16,12 +16,17 @@ class LaunchArticleSeeder extends Seeder
             ['description' => 'مقالات عملية لفهم الخامات والتصاميم والمعاينة والتكلفة والصيانة قبل اتخاذ القرار.', 'is_active' => true],
         );
         $serviceIds = Service::query()->pluck('id', 'name');
+        $featuredImages = config('site.article_featured_images', []);
 
         foreach ($this->articles() as $data) {
+            $featuredImage = $featuredImages[$data['title']] ?? null;
             $article = Article::query()->firstOrCreate(['title' => $data['title']], [
                 'article_category_id' => $category->id,
                 'excerpt' => $data['excerpt'],
                 'body' => $data['body'],
+                'featured_image' => $featuredImage,
+                'featured_image_alt' => $data['title'],
+                'featured_image_caption' => 'صورة توضيحية لمقال '.$data['title'],
                 'status' => 'published',
                 'published_at' => now(),
             ]);
