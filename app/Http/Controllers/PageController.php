@@ -21,8 +21,9 @@ class PageController extends Controller
     public function home(): View
     {
         $homeOrder = array_flip([
-            'مظلات سيارات PVC', 'مظلات شد إنشائي', 'برجولات حديد', 'شبوك وأسوار',
-            'غرف ساندوتش بانل', 'هناجر حديد', 'جلسات شتوية زجاجية', 'بيوت شعر',
+            'مظلات PVC', 'مظلات الشد الإنشائي', 'سواتر حديد', 'سواتر خشب', 'سواتر قماش',
+            'الخيام', 'بيوت الشعر', 'الهناجر', 'الساندوتش بنل', 'البرجولات',
+            'جلسات زجاجية', 'الشترات', 'النوافذ', 'الأبواب الكهربائية',
         ]);
         $featuredServices = Service::published()
             ->with([
@@ -32,8 +33,8 @@ class PageController extends Controller
             ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
             ->get()
             ->sortBy(fn (Service $service): int => $homeOrder[$service->name] ?? 999)
-            ->take(8)->values();
-        $heroService = $featuredServices->firstWhere('name', 'برجولات حديد') ?: $featuredServices->first();
+            ->take(14)->values();
+        $heroService = $featuredServices->firstWhere('name', 'البرجولات') ?: $featuredServices->first();
         $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
@@ -50,7 +51,9 @@ class PageController extends Controller
 
     public function services(): View
     {
-        $categories = ServiceCategory::query()->where('is_active', true)->with(['services' => fn ($q) => $q->published()->orderBy('name')])->orderBy('sort_order')->get();
+        $categories = ServiceCategory::query()->where('is_active', true)->with(['services' => fn ($q) => $q->published()
+            ->with(['category', 'images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])
+            ->orderBy('sort_order')])->orderBy('sort_order')->get();
         $seo = Seo::page('خدمات المظلات والسواتر في الرياض', 'تصفح خدمات المظلات والسواتر المتاحة داخل مدينة الرياض واطلب معاينة لتحديد الخيار المناسب للموقع.', null, $this->crumbs(['الخدمات' => route('services.index')]));
         if ($categories->sum(fn (ServiceCategory $category): int => $category->services->count()) === 0) {
             $seo = Seo::noindex($seo);
@@ -62,7 +65,7 @@ class PageController extends Controller
     public function serviceCategory(string $slug): View
     {
         $category = ServiceCategory::query()->where('slug', $slug)->where('is_active', true)->firstOrFail();
-        $services = $category->services()->published()->with('materials')->paginate(12);
+        $services = $category->services()->published()->with(['category', 'materials', 'images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1)])->orderBy('sort_order')->paginate(12);
         $seo = Seo::page($category->name.' في الرياض', $category->excerpt ?: 'خدمات '.$category->name.' داخل مدينة الرياض.', $category, $this->crumbs(['الخدمات' => route('services.index'), $category->name => url()->current()]));
         $seo = Seo::paginate($services->isEmpty() ? Seo::noindex($seo) : $seo, $services);
 

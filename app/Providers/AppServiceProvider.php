@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
             $categories = Schema::hasTable('service_categories')
                 ? Cache::remember('navigation.service-categories', now()->addMinutes(20), fn () => ServiceCategory::query()
                     ->where('is_active', true)
-                    ->with(['services' => fn ($query) => $query->published()->orderBy('name')])
+                    ->with(['services' => fn ($query) => $query->published()->orderBy('sort_order')])
                     ->orderBy('sort_order')
                     ->get()
                     ->map(fn (ServiceCategory $category): array => [

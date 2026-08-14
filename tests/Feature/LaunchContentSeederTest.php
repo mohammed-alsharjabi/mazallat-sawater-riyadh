@@ -17,24 +17,27 @@ class LaunchContentSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame(5, ServiceCategory::query()->count());
-        $this->assertSame(61, Service::query()->count());
-        $this->assertSame(54, Service::query()->where('status', 'draft')->count());
-        $this->assertSame(7, Service::published()->count());
+        $this->assertSame(6, ServiceCategory::query()->count());
+        $this->assertSame(64, Service::query()->count());
+        $this->assertSame(50, Service::query()->where('status', 'draft')->count());
+        $this->assertSame(14, Service::published()->count());
         $this->assertSame(0, Service::query()->where('is_price_published', true)->count());
         $this->assertSame(10, Article::published()->count());
         $this->assertEqualsCanonicalizing(config('site.launch_services'), Service::published()->pluck('name')->all());
 
-        $this->assertDatabaseHas('services', ['name' => 'مظلات سيارات PVC', 'status' => 'published']);
+        $this->assertDatabaseHas('services', ['name' => 'مظلات PVC', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'سواتر بديل الخشب WPC', 'status' => 'draft']);
-        $this->assertDatabaseHas('services', ['name' => 'جلسات شتوية زجاجية', 'status' => 'draft']);
-        $this->assertDatabaseHas('services', ['name' => 'بيوت شعر', 'status' => 'published']);
+        $this->assertDatabaseHas('services', ['name' => 'جلسات زجاجية', 'status' => 'published']);
+        $this->assertDatabaseHas('services', ['name' => 'بيوت الشعر', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'صيانة وترميم المظلات والسواتر', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'قرميد معدني', 'status' => 'draft']);
-        $this->assertDatabaseHas('services', ['name' => 'الشترات والأبواب الإلكترونية', 'status' => 'published']);
-        $newService = Service::query()->where('name', 'الشترات والأبواب الإلكترونية')->firstOrFail();
-        $this->assertSame('الشترات والأبواب الإلكترونية في الرياض', $newService->seo()->value('meta_title'));
-        $this->assertSame('Service', $newService->seo()->value('schema_type'));
+        foreach (['الشترات', 'النوافذ', 'الأبواب الكهربائية'] as $name) {
+            $this->assertDatabaseHas('services', ['name' => $name, 'status' => 'published']);
+            $newService = Service::query()->where('name', $name)->firstOrFail();
+            $this->assertSame($name.' في الرياض', $newService->seo()->value('meta_title'));
+            $this->assertSame('Service', $newService->seo()->value('schema_type'));
+        }
+        $this->assertDatabaseHas('services', ['name' => 'الشترات والأبواب الإلكترونية', 'status' => 'draft']);
     }
 
     public function test_every_seeded_service_has_the_full_editable_content_template(): void
@@ -75,7 +78,7 @@ class LaunchContentSeederTest extends TestCase
         $area->update(['status' => 'published', 'published_at' => now()]);
         $this->seed();
 
-        $this->assertSame(61, Service::query()->count());
+        $this->assertSame(64, Service::query()->count());
         $this->assertSame(10, Article::query()->count());
         $this->assertSame(5, Area::query()->count());
         $this->assertSame('نص تحريري معتمد من لوحة التحكم', $service->fresh()->content);

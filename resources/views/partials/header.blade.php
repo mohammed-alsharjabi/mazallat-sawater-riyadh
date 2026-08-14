@@ -10,7 +10,16 @@
 
         <nav class="service-design-nav" aria-label="التنقل الرئيسي">
             <a href="{{ route('home') }}">الرئيسية</a>
-            <a class="active" href="{{ route('services.index') }}">الخدمات</a>
+            <div class="service-design-services">
+                <a class="active" href="{{ route('services.index') }}">الخدمات <span aria-hidden="true">⌄</span></a>
+                <div class="service-design-menu">
+                    @foreach($navigationCategories as $category)
+                        <section><a href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }}</a>
+                            @foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach
+                        </section>
+                    @endforeach
+                </div>
+            </div>
             <a href="{{ route('projects.index') }}">أعمالنا</a>
             <a href="{{ route('about') }}">من نحن</a>
         </nav>
@@ -61,8 +70,8 @@
 
     <div class="service-shortcuts" aria-label="الخدمات الأساسية">
         <div class="container-shell">
-            @foreach(collect($navigationCategories)->flatMap(fn ($category) => $category['services'])->take(6) as $item)
-                <a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>
+            @foreach($navigationCategories as $category)
+                <a href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }}</a>
             @endforeach
         </div>
     </div>

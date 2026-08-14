@@ -4,9 +4,9 @@
 
 @php
     $homeServices = $featuredServices->values();
-    $primaryService = $homeServices->firstWhere('name', 'مظلات سيارات PVC') ?: $homeServices->first();
+    $primaryService = $homeServices->firstWhere('name', 'مظلات PVC') ?: $homeServices->first();
     $primaryImage = $primaryService?->images->firstWhere('is_cover', true) ?: $primaryService?->images->first();
-    $spotlightService = $homeServices->firstWhere('name', 'مظلات شد إنشائي') ?: $primaryService;
+    $spotlightService = $homeServices->firstWhere('name', 'مظلات الشد الإنشائي') ?: $primaryService;
     $spotlightImage = $spotlightService?->images->firstWhere('is_cover', true) ?: $spotlightService?->images->first();
     $showcaseServices = collect([$primaryService])->filter()->concat($homeServices->where('id', '!=', $primaryService?->id))->take(5)->values();
     $workServices = $homeServices->filter(fn ($service) => $service->images->isNotEmpty())->take(4)->values();

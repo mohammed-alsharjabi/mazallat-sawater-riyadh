@@ -69,7 +69,7 @@ class ServiceImageSystemTest extends TestCase
     {
         Storage::fake('local');
         Storage::fake('public');
-        $service = Service::where('name', 'مظلات سيارات PVC')->firstOrFail();
+        $service = Service::where('name', 'مظلات PVC')->firstOrFail();
         $file = UploadedFile::fake()->image('private-source.jpg', 500, 400);
         $originalPath = 'service-images/originals/'.$service->id.'/source.jpg';
         Storage::disk('local')->put($originalPath, file_get_contents($file->getRealPath()));
@@ -92,15 +92,18 @@ class ServiceImageSystemTest extends TestCase
         Storage::disk('local')->assertExists($originalPath);
     }
 
-    public function test_electronic_shutters_service_uses_only_the_curated_enhanced_source_set(): void
+    public function test_electronic_assets_are_visually_split_across_three_services(): void
     {
-        $mapping = config('service-images.curated_folders.ElectronicShuttersDoors');
+        $mappings = collect(['shutters', 'windows', 'electric_doors'])
+            ->map(fn (string $key): array => config('service-images.curated_folders.'.$key));
 
-        $this->assertSame('الشترات والأبواب الإلكترونية', $mapping['service']);
-        $this->assertSame(21, $mapping['expected']);
-        $this->assertCount(21, $mapping['contexts']);
-        $this->assertSame(['png'], $mapping['extensions']);
-        $this->assertStringEndsWith('.png', $mapping['cover']);
+        $this->assertEqualsCanonicalizing(['الشترات', 'النوافذ', 'الأبواب الكهربائية'], $mappings->pluck('service')->all());
+        $this->assertSame(21, $mappings->sum('expected'));
+        $mappings->each(function (array $mapping): void {
+            $this->assertSame(['png'], $mapping['extensions']);
+            $this->assertStringEndsWith('.png', $mapping['cover']);
+            $this->assertCount($mapping['expected'], $mapping['files']);
+        });
     }
 
     public function test_admin_can_manage_sort_cover_metadata_soft_delete_and_restore(): void

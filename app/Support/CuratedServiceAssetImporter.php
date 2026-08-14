@@ -23,18 +23,18 @@ class CuratedServiceAssetImporter
         $counts = ['processed' => 0, 'queued' => 0, 'duplicate' => 0, 'excluded' => 0, 'failed' => 0];
         $serviceRows = [];
 
-        foreach (config('service-images.curated_folders', []) as $folder => $mapping) {
+        foreach (config('service-images.curated_folders', []) as $mappingKey => $mapping) {
+            $folder = $mapping['folder'] ?? $mappingKey;
             $service = Service::query()->where('name', $mapping['service'])->first();
             if (! $service) {
                 throw new RuntimeException('الخدمة غير موجودة في قاعدة البيانات: '.$mapping['service']);
             }
 
-            if ($publish) {
+            if ($publish && in_array($service->name, config('site.launch_services', []), true)) {
                 $service->update([
                     'status' => 'published',
                     'is_active' => true,
                     'is_featured' => true,
-                    'sort_order' => array_search($service->name, config('site.launch_services', []), true) + 1,
                     'published_at' => $service->published_at ?: now(),
                 ]);
             }
@@ -59,7 +59,10 @@ class CuratedServiceAssetImporter
                 try {
                     $sequence = $index + 1;
                     $expectedName = $mapping['stem'].'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
-                    $context = $mapping['contexts'][basename($file)] ?? $mapping['context'];
+                    $visualContexts = config('service-images.visual_contexts', []);
+                    $context = $mapping['contexts'][basename($file)]
+                        ?? ($visualContexts[$folder][basename($file)] ?? null)
+                        ?? $mapping['context'];
                     $details = $this->images->inspect($file);
                     $relativeSource = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
                     $result = $this->images->ingest(
@@ -139,18 +142,34 @@ class CuratedServiceAssetImporter
             $serviceRows[] = ['service' => $service->name, 'expected' => $expected, 'imported' => $imported];
         }
 
+        if ($sync && $counts['failed'] === 0) {
+            ServiceImage::query()
+                ->whereHas('service', fn ($query) => $query->whereIn('name', config('service-images.retired_services', [])))
+                ->get()
+                ->each->delete();
+        }
+
         $used = collect($manifest)->pluck('source_path')->filter()->all();
+        $usedHashes = collect($manifest)
+            ->whereIn('processing_status', ['processed', 'queued', 'duplicate'])
+            ->pluck('source_hash')
+            ->filter()
+            ->all();
         foreach ($this->allImages($source) as $file) {
             $relative = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
             if (! in_array($relative, $used, true)) {
-                $counts['excluded']++;
+                $hash = hash_file('sha256', $file);
+                $isDuplicate = in_array($hash, $usedHashes, true);
+                $counts[$isDuplicate ? 'duplicate' : 'excluded']++;
                 $manifest[] = [
                     'source_path' => $relative,
                     'original_folder' => dirname(str_replace('\\', '/', $relative)),
                     'linked_service' => null,
                     'old_name' => basename($file),
-                    'processing_status' => 'excluded',
-                    'processing_notes' => 'ملف زائد عن العدد المؤكد أو لا يثبت الخدمة بصريًا؛ لم يُنشر.',
+                    'processing_status' => $isDuplicate ? 'duplicate_source' : 'excluded',
+                    'processing_notes' => $isDuplicate
+                        ? 'نسخة مطابقة بالـ Hash لصورة مستوردة؛ لم تُكرر داخل المعرض.'
+                        : 'ملف زائد عن العدد المؤكد أو لا يثبت الخدمة بصريًا؛ لم يُنشر.',
                 ];
             }
         }
@@ -182,11 +201,19 @@ class CuratedServiceAssetImporter
             : $folderPath;
         $extensions = array_map('mb_strtolower', $mapping['extensions'] ?? ['jpg', 'jpeg', 'png', 'webp', 'avif']);
         $excluded = $mapping['exclude'] ?? [];
+        $selected = $mapping['files'] ?? null;
         $files = array_values(array_filter(
             $this->allImages($searchPath),
             fn (string $path): bool => in_array(mb_strtolower(pathinfo($path, PATHINFO_EXTENSION)), $extensions, true)
-                && ! in_array(basename($path), $excluded, true),
+                && ! in_array(basename($path), $excluded, true)
+                && ($selected === null || in_array(basename($path), $selected, true)),
         ));
+        if ($selected !== null) {
+            $missing = array_values(array_diff($selected, array_map('basename', $files)));
+            if ($missing !== []) {
+                throw new RuntimeException('ملفات الاختيار الموثق غير موجودة في '.$folder.': '.implode('، ', $missing));
+            }
+        }
         foreach ($mapping['include'] ?? [] as $relative) {
             $path = $source.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relative);
             if (! is_file($path)) {
@@ -221,6 +248,7 @@ class CuratedServiceAssetImporter
 
         return [
             'source_path' => $relative,
+            'source_hash' => $details['hash'],
             'original_folder' => dirname(str_replace('\\', '/', $relative)),
             'linked_service' => $service->name,
             'old_name' => basename($file),

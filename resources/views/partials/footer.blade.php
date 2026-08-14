@@ -1,6 +1,5 @@
 @php
     $footerCategories = collect($navServiceCategories ?? [])->filter(fn ($category) => ! empty($category['services']));
-    $footerServices = $footerCategories->flatMap(fn ($category) => $category['services'])->unique('slug')->take(6);
 @endphp
 <footer class="site-footer">
     <div class="container-shell footer-grid">
@@ -13,10 +12,10 @@
             <a class="footer-quote" href="{{ route('quote') }}">اطلب معاينة لموقعك <span aria-hidden="true">←</span></a>
         </section>
 
-        <nav class="footer-column" aria-label="خدماتنا">
+        <nav class="footer-column footer-service-groups" aria-label="تصنيفات خدماتنا">
             <h2>خدماتنا</h2>
-            @forelse($footerServices as $item)
-                <a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>
+            @forelse($footerCategories as $category)
+                <a href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }} <small>{{ count($category['services']) }}</small></a>
             @empty
                 <a href="{{ route('services.index') }}">جميع الخدمات</a>
             @endforelse

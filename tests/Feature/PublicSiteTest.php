@@ -20,7 +20,7 @@ class PublicSiteTest extends TestCase
         parent::setUp();
         $this->seed();
 
-        Service::query()->where('name', 'مظلات سيارات')->firstOrFail()->update([
+        Service::query()->where('name', 'مظلات PVC')->firstOrFail()->update([
             'status' => 'published',
             'published_at' => now(),
             'is_popular' => true,
@@ -33,7 +33,7 @@ class PublicSiteTest extends TestCase
         $response = $this->get(route('home'));
         $response->assertOk()
             ->assertSee('<html lang="ar-SA" dir="rtl">', false)
-            ->assertSee('مظلات سيارات')
+            ->assertSee('مظلات PVC')
             ->assertSee('tel:+966562066426', false)
             ->assertSee('https://wa.me/966562066426', false)
             ->assertSee('application/ld+json', false)
@@ -53,8 +53,8 @@ class PublicSiteTest extends TestCase
     {
         $this->seed();
 
-        $this->get(route('home'))->assertOk()->assertSee('مظلات سيارات');
-        $this->get(route('home'))->assertOk()->assertSee('مظلات سيارات');
+        $this->get(route('home'))->assertOk()->assertSee('مظلات PVC');
+        $this->get(route('home'))->assertOk()->assertSee('مظلات PVC');
     }
 
     public function test_published_detail_pages_are_accessible_by_arabic_slug(): void

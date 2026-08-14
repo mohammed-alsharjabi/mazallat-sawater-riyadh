@@ -38,7 +38,7 @@ class AdminSeoEditorTest extends TestCase
         $this->assertNotEmpty($service->seo->focus_keyword);
         $this->assertNotEmpty($service->seo->canonical_url);
         $this->assertNotEmpty($service->seo->internal_links);
-        $this->assertDatabaseCount('services', 62);
+        $this->assertDatabaseCount('services', 65);
     }
 
     public function test_duplicate_meta_title_and_focus_keyword_generate_admin_warnings(): void

@@ -33,7 +33,7 @@
 @section('content')
 <div class="service-reference-page">
     <section class="srvc-hero srvc-hero-architectural">
-        <div class="srvc-hero-grid">
+        <div @class(['srvc-hero-grid', 'has-no-image' => ! $heroImage])>
             @if($heroImage)
                 @php($heroLarge = $heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path)
                 <div class="srvc-hero-art" data-reveal>
