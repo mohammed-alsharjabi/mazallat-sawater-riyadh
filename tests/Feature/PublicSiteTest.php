@@ -41,8 +41,8 @@ class PublicSiteTest extends TestCase
             ->assertSee('brand/mazallat-sawater-riyadh-icon.svg', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('data-mobile-drawer', false)
-            ->assertSee('aura-services-grid', false)
-            ->assertSee('حلول متكاملة للمنازل والمشاريع');
+            ->assertSee('home-service-grid', false)
+            ->assertSee('جميع الخدمات بصور واضحة وتفاصيل مختصرة');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
             $this->get(route($route))->assertOk();

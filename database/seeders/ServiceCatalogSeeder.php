@@ -125,6 +125,8 @@ class ServiceCatalogSeeder extends Seeder
             }
         }
 
+        $this->ensureWinterService();
+
         foreach ($taxonomy as $categoryName => $serviceNames) {
             $category = ServiceCategory::query()->where('name', $categoryName)->first();
             if (! $category) {
@@ -140,13 +142,11 @@ class ServiceCatalogSeeder extends Seeder
         }
 
         $legacyElectronicService = Service::query()->where('name', 'الشترات والأبواب الإلكترونية')->first();
-        $shutters = Service::query()->where('name', 'الشترات')->first();
-        if ($legacyElectronicService && $shutters) {
-            Redirect::query()->updateOrCreate(
-                ['old_path' => '/الخدمات/'.$legacyElectronicService->slug],
-                ['new_path' => '/الخدمات/'.$shutters->slug, 'status_code' => 301, 'is_active' => true],
-            );
+        if ($legacyElectronicService) {
+            Redirect::query()->where('old_path', '/الخدمات/'.$legacyElectronicService->slug)->update(['is_active' => false]);
         }
+
+        $this->linkHierarchyAndSources();
 
         Cache::forget('navigation.service-categories');
     }
@@ -190,6 +190,72 @@ class ServiceCatalogSeeder extends Seeder
             $service = Service::query()->where('name', $old)->first();
             if ($service && ! Service::query()->where('name', $new)->exists()) {
                 $service->update(['name' => $new, 'slug' => $new]);
+            }
+        }
+    }
+
+    private function ensureWinterService(): void
+    {
+        $glass = Service::query()->where('name', 'جلسات زجاجية')->first();
+        if (! $glass) {
+            return;
+        }
+
+        $winter = Service::query()->firstOrCreate(['name' => 'الجلسات الشتوية'], [
+            ...$glass->only([
+                'service_category_id', 'content', 'types', 'use_cases', 'materials_details', 'advantages',
+                'disadvantages', 'price_factors', 'installation_steps', 'selection_tips', 'cta',
+            ]),
+            'excerpt' => 'جلسات شتوية زجاجية مريحة تحافظ على وضوح الإطلالة وتقلل أثر الرياح والغبار، مع دراسة التهوية والتظليل والتصريف.',
+            'featured_image' => config('site.service_featured_images.الجلسات الشتوية'),
+            'featured_image_alt' => 'جلسة شتوية زجاجية في الرياض',
+            'featured_image_caption' => 'تصميم جلسة شتوية زجاجية للاستخدام المريح في الأجواء الباردة.',
+            'is_featured' => true,
+            'is_popular' => true,
+            'is_active' => true,
+            'status' => 'published',
+            'published_at' => now(),
+            'sort_order' => 2,
+        ]);
+        $winter->update([
+            'status' => 'published', 'is_active' => true, 'published_at' => $winter->published_at ?: now(),
+            'featured_image' => config('site.service_featured_images.الجلسات الشتوية'),
+        ]);
+        $winter->materials()->syncWithoutDetaching($glass->materials()->pluck('materials.id'));
+        $winter->faqs()->syncWithoutDetaching($glass->faqs()->pluck('faqs.id'));
+    }
+
+    private function linkHierarchyAndSources(): void
+    {
+        Service::query()->update(['parent_service_id' => null, 'image_source_folder' => null]);
+        foreach ([
+            'الخيام' => ['بيوت الشعر'],
+            'الجلسات الشتوية' => ['جلسات زجاجية'],
+            'الشترات والأبواب الإلكترونية' => ['الشترات', 'النوافذ', 'الأبواب الكهربائية'],
+        ] as $parentName => $children) {
+            $parent = Service::query()->where('name', $parentName)->first();
+            if ($parent) {
+                Service::query()->whereIn('name', $children)->update(['parent_service_id' => $parent->id]);
+            }
+        }
+
+        foreach ([
+            'مظلات PVC' => 'madtaltpfc',
+            'مظلات الشد الإنشائي' => 'matalatalshdalnshai',
+            'الجلسات الشتوية' => 'sandawitshpanel',
+            'الشترات والأبواب الإلكترونية' => 'ElectronicShuttersDoors',
+            'البرجولات' => 'bargolat',
+            'بيوت الشعر' => 'bytalshar',
+            'الهناجر' => 'hangers',
+        ] as $serviceName => $folder) {
+            Service::query()->where('name', $serviceName)->update(['image_source_folder' => $folder]);
+        }
+
+        foreach (Service::published()->whereNull('featured_image')->get() as $service) {
+            $cover = $service->processedImages()->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->first();
+            $fallback = $cover?->optimized_path ?: $service->parent?->featured_image;
+            if ($fallback) {
+                $service->update(['featured_image' => $fallback, 'featured_image_alt' => $service->name.' في الرياض']);
             }
         }
     }

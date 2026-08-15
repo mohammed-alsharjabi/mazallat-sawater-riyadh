@@ -46,6 +46,19 @@ fi
 ln -s "${SHARED_DIR}/storage" "${RELEASE_DIR}/storage"
 ln -s "${SHARED_DIR}/.env" "${RELEASE_DIR}/.env"
 
+# Merge versioned source covers and public brand assets into persistent storage.
+# Generated galleries remain untouched while updated static WebP files overwrite
+# their previous version byte-for-byte.
+if [[ -d "${RELEASE_DIR}/storage-template/app" ]]; then
+    for RELATIVE_STORAGE_PATH in assets/services public/about public/brand public/services; do
+        TEMPLATE_PATH="${RELEASE_DIR}/storage-template/app/${RELATIVE_STORAGE_PATH}"
+        if [[ -d "${TEMPLATE_PATH}" ]]; then
+            mkdir -p "${SHARED_DIR}/storage/app/${RELATIVE_STORAGE_PATH}"
+            cp -Rp "${TEMPLATE_PATH}/." "${SHARED_DIR}/storage/app/${RELATIVE_STORAGE_PATH}/"
+        fi
+    done
+fi
+
 if [[ -f "${SHARED_DIR}/database/database.sqlite" ]]; then
     cp -p "${SHARED_DIR}/database/database.sqlite" "${SHARED_DIR}/database/database.sqlite.backup-${RELEASE_ID}"
 fi
@@ -63,6 +76,9 @@ else
 fi
 
 php "${RELEASE_DIR}/artisan" migrate --force
+if [[ -d "${SHARED_DIR}/storage/app/assets" ]]; then
+    php "${RELEASE_DIR}/artisan" services --source="${SHARED_DIR}/storage/app/assets" --sync --publish
+fi
 if php -r 'exit(function_exists("exec") ? 0 : 1);'; then
     php "${RELEASE_DIR}/artisan" storage:link
 else

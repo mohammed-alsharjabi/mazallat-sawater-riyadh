@@ -1,10 +1,12 @@
 @php
     $navigationCategories = collect($navServiceCategories)->filter(fn ($category) => ! empty($category['services']));
+    $headerImage = $siteSettings['header_image'] ?? config('site.header_image');
 @endphp
 <header class="site-header" data-header>
     <div class="container-shell header-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-            <x-site-logo class="header-brand-logo" :alt="$siteSettings['site_name']" />
+            <img class="header-brand-photo" src="{{ asset('storage/'.$headerImage) }}" alt="" width="64" height="64" fetchpriority="high">
+            <span class="header-brand-copy"><strong>{{ $siteSettings['site_name'] }}</strong><small>خبرة في التنفيذ منذ 1999</small></span>
         </a>
 
         <nav class="desktop-nav" aria-label="التنقل الرئيسي">
@@ -48,7 +50,7 @@
 
 <div class="nav-backdrop" data-nav-backdrop hidden></div>
 <aside id="mobile-navigation" class="mobile-drawer" aria-label="قائمة الجوال" aria-hidden="true" data-mobile-drawer>
-    <div class="mobile-drawer-head"><a href="{{ route('home') }}" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية"><x-site-logo class="drawer-brand-logo" :alt="$siteSettings['site_name']" /></a><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
+    <div class="mobile-drawer-head"><a class="drawer-brand" href="{{ route('home') }}" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية"><img src="{{ asset('storage/'.$headerImage) }}" alt="" width="54" height="54"><span><strong>{{ $siteSettings['site_name'] }}</strong><small>منذ 1999</small></span></a><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
     <nav>
         <a href="{{ route('home') }}">الرئيسية</a>
         <details><summary>الخدمات</summary><div>@foreach($navigationCategories as $category)<strong>{{ $category['name'] }}</strong>@foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach @endforeach</div></details>

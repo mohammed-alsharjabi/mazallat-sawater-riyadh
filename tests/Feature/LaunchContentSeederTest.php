@@ -18,9 +18,9 @@ class LaunchContentSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(6, ServiceCategory::query()->count());
-        $this->assertSame(64, Service::query()->count());
-        $this->assertSame(50, Service::query()->where('status', 'draft')->count());
-        $this->assertSame(14, Service::published()->count());
+        $this->assertSame(65, Service::query()->count());
+        $this->assertSame(49, Service::query()->where('status', 'draft')->count());
+        $this->assertSame(16, Service::published()->count());
         $this->assertSame(0, Service::query()->where('is_price_published', true)->count());
         $this->assertSame(10, Article::published()->count());
         $this->assertSame(10, Article::published()->whereNotNull('featured_image')->count());
@@ -29,6 +29,7 @@ class LaunchContentSeederTest extends TestCase
         $this->assertDatabaseHas('services', ['name' => 'مظلات PVC', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'سواتر بديل الخشب WPC', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'جلسات زجاجية', 'status' => 'published']);
+        $this->assertDatabaseHas('services', ['name' => 'الجلسات الشتوية', 'status' => 'published', 'image_source_folder' => 'sandawitshpanel']);
         $this->assertDatabaseHas('services', ['name' => 'بيوت الشعر', 'status' => 'published']);
         $this->assertDatabaseHas('services', ['name' => 'صيانة وترميم المظلات والسواتر', 'status' => 'draft']);
         $this->assertDatabaseHas('services', ['name' => 'قرميد معدني', 'status' => 'draft']);
@@ -38,7 +39,7 @@ class LaunchContentSeederTest extends TestCase
             $this->assertSame($name.' في الرياض', $newService->seo()->value('meta_title'));
             $this->assertSame('Service', $newService->seo()->value('schema_type'));
         }
-        $this->assertDatabaseHas('services', ['name' => 'الشترات والأبواب الإلكترونية', 'status' => 'draft']);
+        $this->assertDatabaseHas('services', ['name' => 'الشترات والأبواب الإلكترونية', 'status' => 'published', 'image_source_folder' => 'ElectronicShuttersDoors']);
 
         foreach (config('site.service_featured_images') as $serviceName => $path) {
             $this->assertDatabaseHas('services', ['name' => $serviceName, 'featured_image' => $path]);
@@ -89,7 +90,7 @@ class LaunchContentSeederTest extends TestCase
         $area->update(['status' => 'published', 'published_at' => now()]);
         $this->seed();
 
-        $this->assertSame(64, Service::query()->count());
+        $this->assertSame(65, Service::query()->count());
         $this->assertSame(10, Article::query()->count());
         $this->assertSame(5, Area::query()->count());
         $this->assertSame('نص تحريري معتمد من لوحة التحكم', $service->fresh()->content);

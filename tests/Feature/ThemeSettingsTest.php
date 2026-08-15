@@ -21,12 +21,12 @@ class ThemeSettingsTest extends TestCase
 
     public function test_default_theme_is_stored_and_rendered_as_css_variables(): void
     {
-        $this->assertSame('#623992', Setting::where('key', 'theme_primary')->value('value'));
+        $this->assertSame('#7A1F35', Setting::where('key', 'theme_primary')->value('value'));
 
         $this->get(route('home'))->assertOk()
-            ->assertSee('--color-primary:#623992', false)
-            ->assertSee('--color-secondary:#F374A0', false)
-            ->assertSee('<meta name="theme-color" content="#623992">', false);
+            ->assertSee('--color-primary:#7A1F35', false)
+            ->assertSee('--color-secondary:#B88352', false)
+            ->assertSee('<meta name="theme-color" content="#7A1F35">', false);
     }
 
     public function test_admin_can_save_an_accessible_palette_and_cache_is_cleared(): void
@@ -58,7 +58,7 @@ class ThemeSettingsTest extends TestCase
             ->call('save')
             ->assertHasErrors(['values.theme_primary_content']);
 
-        $this->assertSame('#623992', Setting::where('key', 'theme_primary')->value('value'));
+        $this->assertSame('#7A1F35', Setting::where('key', 'theme_primary')->value('value'));
     }
 
     public function test_admin_can_restore_default_palette(): void
@@ -68,8 +68,8 @@ class ThemeSettingsTest extends TestCase
 
         Livewire::actingAs($admin)->test(SettingsEditor::class)
             ->call('resetAppearance')
-            ->assertSet('values.theme_primary', '#623992');
+            ->assertSet('values.theme_primary', '#7A1F35');
 
-        $this->assertSame('#623992', Setting::where('key', 'theme_primary')->value('value'));
+        $this->assertSame('#7A1F35', Setting::where('key', 'theme_primary')->value('value'));
     }
 }

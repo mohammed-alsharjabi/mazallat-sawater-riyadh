@@ -23,55 +23,38 @@ class CuratedServiceAssetImporter
         $counts = ['processed' => 0, 'queued' => 0, 'duplicate' => 0, 'excluded' => 0, 'failed' => 0];
         $serviceRows = [];
 
-        foreach (config('service-images.curated_folders', []) as $mappingKey => $mapping) {
-            $folder = $mapping['folder'] ?? $mappingKey;
-            $service = Service::query()->where('name', $mapping['service'])->first();
+        $assignments = $this->dynamicAssignments($source, $manifest, $counts);
+        $assignedServiceNames = $assignments->pluck('service')->unique()->values()->all();
+        $managedFolders = Service::query()->whereNotNull('image_source_folder')->pluck('image_source_folder')->unique()->values()->all();
+        foreach ($assignments->groupBy('service') as $serviceName => $items) {
+            $service = Service::query()->where('name', $serviceName)->first();
             if (! $service) {
-                throw new RuntimeException('الخدمة غير موجودة في قاعدة البيانات: '.$mapping['service']);
+                throw new RuntimeException('الخدمة غير موجودة في قاعدة البيانات: '.$serviceName);
             }
 
             if ($publish && in_array($service->name, config('site.launch_services', []), true)) {
                 $service->update([
-                    'status' => 'published',
-                    'is_active' => true,
-                    'is_featured' => true,
+                    'status' => 'published', 'is_active' => true, 'is_featured' => true,
                     'published_at' => $service->published_at ?: now(),
                 ]);
             }
 
-            $files = $this->filesFor($source, $folder, $mapping);
-            $expected = (int) $mapping['expected'];
-            if (count($files) !== $expected) {
-                throw new RuntimeException(sprintf('الخدمة %s: المتوقع %d صورة لكن الاختيار الآمن أعاد %d.', $service->name, $expected, count($files)));
-            }
-
+            $items = $items->sortBy('relative', SORT_NATURAL | SORT_FLAG_CASE)->values();
             $keptHashes = [];
             $coverImageId = null;
-            $duplicateFileNames = ServiceImage::query()
-                ->where('service_id', $service->id)
-                ->whereNotNull('file_name')
-                ->selectRaw('file_name, COUNT(*) AS aggregate')
-                ->groupBy('file_name')
-                ->havingRaw('COUNT(*) > 1')
-                ->pluck('file_name')
-                ->all();
-            foreach ($files as $index => $file) {
+            foreach ($items as $index => $entry) {
+                $file = $entry['file'];
                 try {
                     $sequence = $index + 1;
-                    $expectedName = $mapping['stem'].'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
-                    $visualContexts = config('service-images.visual_contexts', []);
-                    $context = $mapping['contexts'][basename($file)]
-                        ?? ($visualContexts[$folder][basename($file)] ?? null)
-                        ?? $mapping['context'];
-                    $details = $this->images->inspect($file);
-                    $relativeSource = ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR);
+                    $expectedName = $entry['stem'].'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'.webp';
+                    $details = $entry['details'];
                     $result = $this->images->ingest(
                         $service,
                         $file,
                         basename($file),
-                        dirname(str_replace('\\', '/', $relativeSource)),
-                        $mapping['stem'],
-                        $context,
+                        dirname($entry['relative']),
+                        $entry['stem'],
+                        $entry['context'],
                         $queue,
                         true,
                         $sequence,
@@ -82,25 +65,26 @@ class CuratedServiceAssetImporter
                     if ($image->trashed()) {
                         $image->restore();
                     }
-                    $mustNormalizeDerivatives = $image->file_name !== $expectedName
-                        || in_array($image->file_name, $duplicateFileNames, true)
-                        || ! Storage::disk('public')->exists('service-images/'.$service->id.'/'.$expectedName);
-                    if ($mustNormalizeDerivatives) {
-                        $image->forceFill(['file_name' => $expectedName])->save();
+                    $hasProcessedDerivative = $image->processing_status === 'processed'
+                        && filled($image->optimized_path)
+                        && Storage::disk('public')->exists($image->optimized_path);
+                    if (! $hasProcessedDerivative) {
+                        // A filename may have shifted after the source map changed. Clear stale
+                        // derivative metadata first so reprocessing cannot remove another row's
+                        // now-current deterministic path.
+                        $image->forceFill(['file_name' => $expectedName, 'optimized_path' => null, 'variants' => null])->save();
                         $image = $this->images->reprocess($image, $queue);
                         $result['status'] = $queue ? 'queued' : 'processed';
                     }
-                    $title = $context.' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT);
-                    $isCover = isset($mapping['cover'])
-                        ? basename($file) === $mapping['cover']
-                        : $sequence === 1;
+
+                    $isCover = $entry['cover'] || ($coverImageId === null && $sequence === 1);
                     $image->update([
                         'sort_order' => $sequence,
                         'is_cover' => $isCover,
-                        'source_folder' => dirname(str_replace('\\', '/', $relativeSource)),
+                        'source_folder' => dirname($entry['relative']),
                         'original_name' => basename($file),
-                        'title' => $title,
-                        'alt_text' => $context.' في موقع التنفيذ في الرياض',
+                        'title' => $entry['context'].' في الرياض — صورة '.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT),
+                        'alt_text' => $entry['context'].' في موقع التنفيذ في الرياض',
                         'caption' => 'صورة حقيقية من أعمال '.$service->name.' في الرياض.',
                     ]);
                     if ($isCover) {
@@ -112,7 +96,8 @@ class CuratedServiceAssetImporter
                 } catch (\Throwable $exception) {
                     $counts['failed']++;
                     $manifest[] = [
-                        'original_folder' => $folder,
+                        'source_path' => $entry['relative'],
+                        'original_folder' => dirname($entry['relative']),
                         'linked_service' => $service->name,
                         'old_name' => basename($file),
                         'processing_status' => 'failed',
@@ -124,23 +109,47 @@ class CuratedServiceAssetImporter
             if ($sync && $counts['failed'] === 0) {
                 ServiceImage::query()
                     ->where('service_id', $service->id)
+                    ->where(function ($query) use ($managedFolders): void {
+                        foreach ($managedFolders as $folder) {
+                            $query->orWhere('source_folder', $folder)->orWhere('source_folder', 'like', $folder.'/%');
+                        }
+                    })
                     ->whereNotIn('content_hash', $keptHashes)
                     ->get()
                     ->each->delete();
             }
 
-            if (! $coverImageId) {
-                throw new RuntimeException('لم تُعثر صورة الغلاف المحددة لخدمة '.$service->name.'.');
+            if ($coverImageId) {
+                ServiceImage::query()->where('service_id', $service->id)->whereKeyNot($coverImageId)->update(['is_cover' => false]);
+                ServiceImage::query()->whereKey($coverImageId)->update(['is_cover' => true]);
+                if (! config('site.service_featured_images.'.$service->name)) {
+                    $cover = ServiceImage::query()->find($coverImageId);
+                    if ($cover?->optimized_path) {
+                        $service->update(['featured_image' => $cover->optimized_path, 'featured_image_alt' => $service->name.' في الرياض']);
+                    }
+                }
             }
-            ServiceImage::query()->where('service_id', $service->id)->whereKeyNot($coverImageId)->update(['is_cover' => false]);
-            ServiceImage::query()->whereKey($coverImageId)->update(['is_cover' => true]);
-            $imported = ServiceImage::query()->where('service_id', $service->id)->count();
-            $uniqueNames = ServiceImage::query()->where('service_id', $service->id)->distinct()->count('file_name');
-            if ($imported !== $expected || $uniqueNames !== $expected) {
-                throw new RuntimeException(sprintf('الخدمة %s: تعذر تثبيت %d اسم صورة فريد (المستوردة %d، الفريدة %d).', $service->name, $expected, $imported, $uniqueNames));
-            }
-            $serviceRows[] = ['service' => $service->name, 'expected' => $expected, 'imported' => $imported];
+            $imported = ServiceImage::query()->where('service_id', $service->id)->whereNull('deleted_at')->count();
+            $serviceRows[] = ['service' => $service->name, 'expected' => $items->count(), 'imported' => $imported];
         }
+
+        if ($sync && $counts['failed'] === 0) {
+            Service::query()
+                ->whereNotNull('image_source_folder')
+                ->whereNotIn('name', $assignedServiceNames)
+                ->each(function (Service $service) use ($managedFolders): void {
+                    $service->images()
+                        ->where(function ($query) use ($managedFolders): void {
+                            foreach ($managedFolders as $folder) {
+                                $query->orWhere('source_folder', $folder)->orWhere('source_folder', 'like', $folder.'/%');
+                            }
+                        })
+                        ->get()
+                        ->each->delete();
+                });
+        }
+
+        $this->ensurePublishedCovers();
 
         if ($sync && $counts['failed'] === 0) {
             ServiceImage::query()
@@ -186,6 +195,85 @@ class CuratedServiceAssetImporter
         $payload['manifest_path'] = storage_path('app/private/'.$manifestPath);
 
         return $payload;
+    }
+
+    private function dynamicAssignments(string $source, array &$manifest, array &$counts): \Illuminate\Support\Collection
+    {
+        $explicit = [];
+        $serviceProfiles = [];
+        foreach (config('service-images.curated_folders', []) as $mappingKey => $mapping) {
+            $folder = $mapping['folder'] ?? $mappingKey;
+            $serviceProfiles[$mapping['service']] = $mapping;
+            foreach ($mapping['files'] ?? [] as $name) {
+                $explicit[$folder.'/'.$name] = $mapping;
+            }
+            foreach ($mapping['include'] ?? [] as $relative) {
+                $explicit[str_replace('\\', '/', $relative)] = $mapping;
+            }
+        }
+
+        $visualContexts = config('service-images.visual_contexts', []);
+        $visualOverrides = config('service-images.visual_overrides', []);
+        $defaults = Service::query()->whereNotNull('image_source_folder')->get()->keyBy('image_source_folder');
+        $assignments = collect();
+        foreach ($defaults as $folder => $defaultService) {
+            $folderPath = $source.DIRECTORY_SEPARATOR.$folder;
+            if (! is_dir($folderPath)) {
+                throw new RuntimeException('مجلد صور الخدمة غير موجود: '.$folderPath);
+            }
+
+            foreach ($this->allImages($folderPath) as $file) {
+                $relative = str_replace('\\', '/', ltrim(str_replace($source, '', $file), DIRECTORY_SEPARATOR));
+                $details = $this->images->inspect($file);
+                $override = $visualOverrides[$details['hash']] ?? null;
+                if (array_key_exists($details['hash'], $visualOverrides) && empty($override['service'])) {
+                    $counts['excluded']++;
+                    $manifest[] = [
+                        'source_path' => $relative,
+                        'source_hash' => $details['hash'],
+                        'original_folder' => dirname($relative),
+                        'linked_service' => null,
+                        'old_name' => basename($file),
+                        'processing_status' => 'excluded',
+                        'processing_notes' => $override['reason'] ?? 'الصورة غير قابلة للإسناد البصري إلى خدمة مؤكدة.',
+                    ];
+                    continue;
+                }
+
+                $profile = $explicit[$relative] ?? null;
+                $serviceName = $override['service'] ?? ($profile['service'] ?? $defaultService->name);
+                $profile = $serviceProfiles[$serviceName] ?? $profile ?? [];
+                $stem = $override['stem'] ?? config('service-images.service_stems.'.$serviceName, 'service-riyadh');
+                $context = $override['context']
+                    ?? ($visualContexts[$folder][basename($file)] ?? null)
+                    ?? ($profile['context'] ?? $serviceName);
+                $cover = isset($profile['cover']) && basename($file) === $profile['cover'];
+                $assignments->push(compact('file', 'relative', 'details', 'stem', 'context', 'cover') + ['service' => $serviceName]);
+            }
+        }
+
+        return $assignments
+            ->unique(fn (array $entry): string => $entry['service'].'|'.$entry['details']['hash'])
+            ->values();
+    }
+
+    private function ensurePublishedCovers(): void
+    {
+        $services = Service::published()->with(['parent', 'processedImages', 'children.processedImages'])->get();
+        foreach ($services as $service) {
+            if (config('site.service_featured_images.'.$service->name)) {
+                continue;
+            }
+            $cover = $service->processedImages->firstWhere('is_cover', true) ?: $service->processedImages->first();
+            $childCover = $service->children
+                ->flatMap->processedImages
+                ->sortByDesc('is_cover')
+                ->first();
+            $path = $cover?->optimized_path ?: $childCover?->optimized_path ?: $service->parent?->featured_image;
+            if ($path) {
+                $service->update(['featured_image' => $path, 'featured_image_alt' => $service->name.' في الرياض']);
+            }
+        }
     }
 
     private function filesFor(string $source, string $folder, array $mapping): array

@@ -4,8 +4,8 @@
 
 @php
     $orderedImages = $service->images->where('processing_status', 'processed')->sortBy('sort_order')->values();
-    $heroImage = $orderedImages->firstWhere('is_cover', true) ?: $orderedImages->first();
-    $galleryImages = collect([$heroImage])->filter()->concat($orderedImages->reject(fn ($image) => $image->id === $heroImage?->id))->values();
+    $heroImage = $orderedImages->firstWhere('is_cover', true) ?: $orderedImages->first() ?: $galleryImages->first();
+    $galleryImages = $galleryImages->sortBy('sort_order')->unique('id')->values();
     $aboutImage = $galleryImages->first(fn ($image) => $image->id !== $heroImage?->id && ($image->width ?? 0) >= ($image->height ?? 0)) ?: $galleryImages->get(1) ?: $heroImage;
     $hasHeroVisual = filled($service->featured_image) || $heroImage;
     $heroInsetImage = $service->featured_image ? $heroImage : ($aboutImage?->id !== $heroImage?->id ? $aboutImage : null);
@@ -73,24 +73,22 @@
     @if($galleryImages->isNotEmpty())
     <section class="srvc-section srvc-works" id="works">
         <div class="srvc-shell">
-            <header class="srvc-heading" data-reveal><h2>أعمالنا في خدمة {{ $service->name }} بالرياض</h2><i aria-hidden="true"></i></header>
+            <header class="srvc-heading" data-reveal><h2>{{ $isMainService ? 'جميع صور الخدمة وخدماتها الفرعية' : 'جميع صور '.$service->name }}</h2><i aria-hidden="true"></i></header>
             <div class="srvc-gallery" data-service-gallery>
                 @foreach($galleryImages as $image)
                     @php($large = $image->variant('gallery')['path'] ?? $image->optimized_path)
-                    <figure @if($loop->index >= 10) hidden data-gallery-extra @endif data-reveal>
+                    <figure data-reveal>
                         <button type="button" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$large).'?v='.($image->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $image->alt_text }}" data-lightbox-caption="{{ $image->caption }}">
-                            <x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" sizes="(max-width: 560px) 48vw, (max-width: 1200px) 24vw, 19vw" />
+                            <x-responsive-image :image="$image" :alt="$image->alt_text ?: $service->name" variant="thumbnail" loading="lazy" sizes="(max-width: 560px) 48vw, (max-width: 1200px) 24vw, 19vw" />
                         </button>
                     </figure>
                 @endforeach
             </div>
-            @if($galleryImages->count() > 10)
-                <button class="srvc-show-all" type="button" data-gallery-toggle data-collapsed-label="عرض جميع الأعمال" data-expanded-label="عرض الأعمال المختارة">عرض جميع الأعمال <span aria-hidden="true">←</span></button>
-            @endif
         </div>
     </section>
     @endif
 
+    @if($isMainService)
     <section class="srvc-section srvc-benefits">
         <div class="srvc-shell">
             <header class="srvc-heading" data-reveal><h2>لماذا تختار هذه الخدمة؟</h2><i aria-hidden="true"></i></header>
@@ -174,6 +172,7 @@
             </div>
         </div>
     </section>
+    @endif
     @endif
 </div>
 

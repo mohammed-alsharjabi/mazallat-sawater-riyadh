@@ -78,7 +78,8 @@ return [
         ],
         'glass_rooms' => [
             'folder' => 'sandawitshpanel', 'service' => 'جلسات زجاجية', 'expected' => 8, 'stem' => 'glass-room-riyadh',
-            'context' => 'جلسة خارجية مغلقة بواجهات زجاجية', 'cover' => 'aaa.webp',
+            'context' => 'جلسة شتوية مغلقة بواجهات زجاجية', 'cover' => 'aaa.webp',
+            'files' => ['aaa.webp', 'etgergrteg.webp', 'gertgre.webp', 'regfr.webp', 'rerre.webp', 'rrr.webp', 'ttrtg.webp'],
             'include' => ['matalatalshdalnshai/WhatsApp Image 2026-08-09 at 7.31.57 PM (1).webp'],
         ],
         'electric_doors' => [
@@ -158,15 +159,17 @@ return [
         'شبوك وأسوار' => 'fence-riyadh',
         'الساندوتش بنل' => 'sandwich-panel-riyadh',
         'جلسات زجاجية' => 'glass-room-riyadh',
+        'الجلسات الشتوية' => 'winter-glass-room-riyadh',
         'البرجولات' => 'pergola-riyadh',
         'بيوت الشعر' => 'bayt-shaar-riyadh',
         'الخيام' => 'tents-riyadh',
         'الشترات' => 'shutters-riyadh',
         'النوافذ' => 'window-shutters-riyadh',
         'الأبواب الكهربائية' => 'electric-doors-riyadh',
+        'الشترات والأبواب الإلكترونية' => 'electronic-shutters-doors-riyadh',
     ],
 
-    'retired_services' => ['الشترات والأبواب الإلكترونية'],
+    'retired_services' => [],
 
     'visual_overrides' => [
         // صور شد إنشائي مكررة داخل مجلد PVC؛ الدليل المرئي واضح وتبقى خانة source_folder كما هي.
@@ -183,7 +186,7 @@ return [
         'aee41db23183e4e59ac9c8b3c0a86c787bac6c372f37d8e63cac8f3ae191474a' => ['service' => 'الساندوتش بنل', 'stem' => 'sandwich-panel-riyadh', 'context' => 'غرفة خارجية جاهزة بألواح وجدران معزولة'],
         'd47c30d1373c7cb2db56493a4cd8bca1fd5545e01ec799938c20b99c3bacbec3' => ['service' => 'البرجولات', 'stem' => 'pergola-riyadh', 'context' => 'هيكل برجولة حديد قائم في مساحة خارجية'],
         '0b48b240ee719e7fc5a1d27b9853cffbc676c5b0744b460bae34a9ccc4449cf6' => ['service' => 'البرجولات', 'stem' => 'pergola-riyadh', 'context' => 'برجولة حديد بسقف شرائح في فناء خارجي'],
-        '1e1111f38d6f4bf4d5f48f8bee1f6df41fc09d88f884bf5e0eff2ef177410332' => ['service' => 'جلسات زجاجية', 'stem' => 'glass-room-riyadh', 'context' => 'جلسة خارجية مغلقة بواجهات زجاجية'],
+        '1e1111f38d6f4bf4d5f48f8bee1f6df41fc09d88f884bf5e0eff2ef177410332' => ['service' => 'جلسات زجاجية', 'stem' => 'glass-room-riyadh', 'context' => 'جلسة شتوية مغلقة بواجهات زجاجية'],
         '57932c98f7665909bd038c1934e2c723ee50bfa90d8328ef0bd94838bf8fe74c' => ['service' => 'البرجولات', 'stem' => 'pergola-riyadh', 'context' => 'برجولة حديد مستقلة في حديقة'],
 
         // صور أسوار وشبوك ملاعب وليست هناجر.

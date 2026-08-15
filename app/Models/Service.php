@@ -14,7 +14,7 @@ class Service extends Model
 {
     use HasArabicSlug, HasSeo;
 
-    protected $fillable = ['service_category_id', 'name', 'slug', 'excerpt', 'content', 'types', 'use_cases', 'materials_details', 'advantages', 'disadvantages', 'price_factors', 'installation_steps', 'selection_tips', 'cta', 'featured_image', 'featured_image_alt', 'featured_image_caption', 'video_url', 'video_title', 'video_thumbnail', 'video_duration_seconds', 'price_from', 'price_to', 'price_unit', 'price_note', 'is_price_published', 'is_featured', 'is_popular', 'sort_order', 'is_active', 'status', 'published_at'];
+    protected $fillable = ['service_category_id', 'parent_service_id', 'image_source_folder', 'name', 'slug', 'excerpt', 'content', 'types', 'use_cases', 'materials_details', 'advantages', 'disadvantages', 'price_factors', 'installation_steps', 'selection_tips', 'cta', 'featured_image', 'featured_image_alt', 'featured_image_caption', 'video_url', 'video_title', 'video_thumbnail', 'video_duration_seconds', 'price_from', 'price_to', 'price_unit', 'price_note', 'is_price_published', 'is_featured', 'is_popular', 'sort_order', 'is_active', 'status', 'published_at'];
 
     protected function casts(): array
     {
@@ -24,6 +24,16 @@ class Service extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ServiceCategory::class, 'service_category_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_service_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_service_id')->orderBy('sort_order')->orderBy('id');
     }
 
     public function materials(): BelongsToMany

@@ -18,26 +18,22 @@ class PageController extends Controller
 {
     public function home(): View
     {
-        $homeOrder = array_flip([
-            'مظلات PVC', 'مظلات الشد الإنشائي', 'سواتر حديد', 'سواتر خشب', 'سواتر قماش',
-            'الخيام', 'بيوت الشعر', 'الهناجر', 'الساندوتش بنل', 'البرجولات',
-            'جلسات زجاجية', 'الشترات', 'النوافذ', 'الأبواب الكهربائية',
-        ]);
-        $featuredServices = Service::published()
+        $services = Service::published()
             ->with([
-                'category', 'materials',
-                'images' => fn ($query) => $query->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(8),
+                'category', 'parent',
+                'images' => fn ($query) => $query->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1),
             ])
             ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
-            ->get()
-            ->sortBy(fn (Service $service): int => $homeOrder[$service->name] ?? 999)
-            ->take(14)->values();
-        $heroService = $featuredServices->firstWhere('name', 'البرجولات') ?: $featuredServices->first();
-        $heroImage = $heroService?->images->firstWhere('is_cover', true) ?: $heroService?->images->first();
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        $mainServices = $services->whereNull('parent_service_id')->values();
+        $allServices = $services->values();
+        $heroService = $mainServices->firstWhere('name', 'مظلات الشد الإنشائي') ?: $mainServices->first();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
 
-        return view('pages.home', compact('featuredServices', 'heroService', 'heroImage', 'trustItems', 'seo'));
+        return view('pages.home', compact('mainServices', 'allServices', 'trustItems', 'seo'));
     }
 
     public function about(): View
@@ -73,10 +69,19 @@ class PageController extends Controller
     public function service(string $slug): View
     {
         $service = Service::published()->where('slug', $slug)->with([
-            'category', 'materials',
+            'category', 'materials', 'parent',
             'images' => fn ($q) => $q->where('processing_status', 'processed')->reorder()->orderBy('sort_order'),
+            'children' => fn ($q) => $q->published()->with([
+                'category',
+                'images' => fn ($images) => $images->where('processing_status', 'processed')->reorder()->orderBy('sort_order'),
+            ]),
             'seo',
         ])->firstOrFail();
+        $isMainService = $service->parent_service_id === null;
+        $galleryImages = $isMainService
+            ? $service->images->concat($service->children->flatMap->images)->unique('content_hash')->values()
+            : $service->images->unique('content_hash')->values();
+        $childServices = $isMainService ? $service->children : collect();
         $related = Service::published()->whereKeyNot($service->id)
             ->where(fn ($query) => $query
                 ->whereNotNull('featured_image')
@@ -85,7 +90,7 @@ class PageController extends Controller
             ->orderByRaw('CASE WHEN service_category_id = ? THEN 0 ELSE 1 END', [$service->service_category_id])->limit(3)->get();
         $seo = Seo::page($service->name.' | مظلات وسواتر الرياض', $service->excerpt ?: 'تفاصيل '.$service->name.' وخيارات المعاينة داخل الرياض.', $service, $this->crumbs(['الخدمات' => route('services.index'), $service->name => url()->current()]));
 
-        return view('pages.services.show', compact('service', 'related', 'seo'));
+        return view('pages.services.show', compact('service', 'related', 'galleryImages', 'childServices', 'isMainService', 'seo'));
     }
 
     public function projects(): View
