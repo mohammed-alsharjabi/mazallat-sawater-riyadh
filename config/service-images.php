@@ -12,6 +12,7 @@ return [
     'jpeg_quality' => 84,
 
     'curated_source' => env('SERVICE_IMAGES_DIRECTORY', storage_path('app/assets')),
+    'auto_sync_on_web_request' => env('SERVICE_IMAGES_AUTO_SYNC', true),
     'curated_folders' => [
         'pvc' => [
             'folder' => 'madtaltpfc', 'service' => 'مظلات PVC', 'expected' => 45,
