@@ -34,15 +34,17 @@ class PublicSiteTest extends TestCase
         $response->assertOk()
             ->assertSee('<html lang="ar-SA" dir="rtl">', false)
             ->assertSee('مظلات PVC')
-            ->assertSee('tel:+966562066426', false)
-            ->assertSee('https://wa.me/966562066426', false)
+            ->assertSee('tel:+966508667812', false)
+            ->assertSee('https://wa.me/966508667812', false)
             ->assertSee('application/ld+json', false)
             ->assertSee('brand/mazallat-sawater-riyadh-logo.svg', false)
             ->assertSee('brand/mazallat-sawater-riyadh-icon.svg', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('data-mobile-drawer', false)
             ->assertSee('home-service-grid', false)
-            ->assertSee('جميع الخدمات بصور واضحة وتفاصيل مختصرة');
+            ->assertSee('home-hero-media', false)
+            ->assertSee('geo-divider', false)
+            ->assertSee('مظلات وسواتر وبرجولات بصور حقيقية ووصف واضح');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
             $this->get(route($route))->assertOk();
@@ -88,7 +90,7 @@ class PublicSiteTest extends TestCase
         $this->get(route('about'))->assertOk()
             ->assertSee('بدأ عملنا في السواتر عام 1999')
             ->assertSee('مشاريع حكومية ولشركات كبيرة')
-            ->assertSee('+966 56 206 6426')
+            ->assertSee('050 866 7812')
             ->assertSee('storage/about/aboutus.webp', false);
     }
 

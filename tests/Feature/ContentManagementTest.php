@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\TrustItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -68,5 +69,19 @@ class ContentManagementTest extends TestCase
 
         $this->assertDatabaseHas(TrustItem::class, ['label' => 'نطاق التغطية', 'is_active' => true]);
         $this->get(route('home'))->assertOk()->assertSee('جميع أحياء الرياض');
+    }
+
+    public function test_home_hero_image_is_rendered_from_the_managed_setting(): void
+    {
+        $this->seed();
+        $this->assertSame(config('site.hero_image'), Setting::where('key', 'hero_image')->value('value'));
+
+        $this->get(route('home'))->assertOk()->assertSee('storage/'.config('site.hero_image'), false);
+
+        Setting::where('key', 'hero_image')->update(['value' => 'brand/hero-from-settings.webp']);
+        Cache::forget('site.settings.all');
+        Cache::forget('site.settings.public');
+
+        $this->get(route('home'))->assertOk()->assertSee('storage/brand/hero-from-settings.webp', false);
     }
 }

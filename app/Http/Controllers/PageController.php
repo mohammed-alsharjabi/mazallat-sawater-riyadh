@@ -9,10 +9,12 @@ use App\Models\Material;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\ServiceImage;
 use App\Models\TrustItem;
 use App\Support\ArticleContent;
 use App\Support\Seo;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 
 class PageController extends Controller
 {
@@ -23,17 +25,51 @@ class PageController extends Controller
                 'category', 'parent',
                 'images' => fn ($query) => $query->where('processing_status', 'processed')->reorder()->orderByDesc('is_cover')->orderBy('sort_order')->limit(1),
             ])
-            ->withCount(['images' => fn ($query) => $query->where('processing_status', 'processed'), 'projects' => fn ($query) => $query->published()])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
         $mainServices = $services->whereNull('parent_service_id')->values();
-        $allServices = $services->values();
+        // كل خدمة رئيسية تتبعها خدماتها الفرعية حتى تقرأ الشبكة بترتيب التصنيف نفسه.
+        $serviceCards = $mainServices
+            ->flatMap(fn (Service $service) => [$service, ...$services->where('parent_service_id', $service->id)])
+            ->values();
+        $serviceCards = $serviceCards
+            ->concat($services->whereNotIn('id', $serviceCards->pluck('id')))
+            ->values();
         $heroService = $mainServices->firstWhere('name', 'مظلات الشد الإنشائي') ?: $mainServices->first();
+        $galleryImages = $this->homeGalleryImages();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
 
-        return view('pages.home', compact('mainServices', 'allServices', 'trustItems', 'seo'));
+        return view('pages.home', compact('serviceCards', 'galleryImages', 'trustItems', 'seo'));
+    }
+
+    /**
+     * صور المعرض الرئيسي من قاعدة البيانات: كل صور الخدمات المنشورة موزعة بالتناوب
+     * بين الخدمات حتى تظهر جميع الخدمات في أعلى المعرض دون تكرار الصورة نفسها.
+     */
+    private function homeGalleryImages(): Collection
+    {
+        $groups = ServiceImage::query()
+            ->where('processing_status', 'processed')
+            ->whereHas('service', fn ($query) => $query->published())
+            ->with('service:id,name,slug,sort_order')
+            ->orderByDesc('is_cover')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->unique('content_hash')
+            ->groupBy('service_id')
+            ->sortBy(fn ($images) => $images->first()->service?->sort_order ?? 0)
+            ->values();
+
+        if ($groups->isEmpty()) {
+            return collect();
+        }
+
+        return collect(range(0, $groups->max(fn ($images) => $images->count()) - 1))
+            ->flatMap(fn (int $index) => $groups->map(fn ($images) => $images->values()->get($index))->filter()->values())
+            ->values();
     }
 
     public function about(): View

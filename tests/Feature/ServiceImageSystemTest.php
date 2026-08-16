@@ -160,7 +160,7 @@ class ServiceImageSystemTest extends TestCase
         $response->assertOk()
             ->assertSee('class="site-header"', false)
             ->assertDontSee('service-design-header', false)
-            ->assertSee('class="srvc-direct-contact"', false)
+            ->assertSee('class="home-hero-direct"', false)
             ->assertSee('جميع صور الخدمة وخدماتها الفرعية')
             ->assertDontSee('data-gallery-toggle', false)
             ->assertSee('<picture>', false)

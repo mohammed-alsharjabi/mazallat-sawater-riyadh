@@ -13,6 +13,18 @@ return [
 
     'curated_source' => env('SERVICE_IMAGES_DIRECTORY', storage_path('app/assets')),
     'auto_sync_on_web_request' => env('SERVICE_IMAGES_AUTO_SYNC', true),
+
+    /*
+     * مجلدات صور إضافية لخدمات قائمة، وليست خدمات جديدة. تُستورد بعد صور
+     * المجلد الأصلي للخدمة فيبقى ترتيب المعرض: القديم أولًا ثم الجديد.
+     */
+    'additional_folders' => [
+        'hangers2' => 'الهناجر',
+        'bargolat2' => 'البرجولات',
+        'matalatalshdalnshai2' => 'مظلات الشد الإنشائي',
+        'bytalshar2' => 'بيوت الشعر',
+        'sandawitshpanel2' => 'الساندوتش بنل',
+    ],
     'curated_folders' => [
         'pvc' => [
             'folder' => 'madtaltpfc', 'service' => 'مظلات PVC', 'expected' => 45,

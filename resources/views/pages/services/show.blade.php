@@ -8,7 +8,6 @@
     $galleryImages = $galleryImages->sortBy('sort_order')->unique('id')->values();
     $aboutImage = $galleryImages->first(fn ($image) => $image->id !== $heroImage?->id && ($image->width ?? 0) >= ($image->height ?? 0)) ?: $galleryImages->get(1) ?: $heroImage;
     $hasHeroVisual = filled($service->featured_image) || $heroImage;
-    $heroInsetImage = $service->featured_image ? $heroImage : ($aboutImage?->id !== $heroImage?->id ? $aboutImage : null);
     $lines = fn ($value) => collect(preg_split('/\R/u', (string) $value))->map('trim')->filter()->values();
     $types = $lines($service->types);
     $useCases = $lines($service->use_cases);
@@ -34,41 +33,46 @@
 
 @section('content')
 <div class="service-reference-page">
-    <section class="srvc-hero srvc-hero-architectural">
-        <div @class(['srvc-hero-grid', 'has-no-image' => ! $hasHeroVisual])>
+    {{-- هيرو الخدمة بنفس تصميم هيرو الصفحة الرئيسية، والصورة فقط تتغير بحسب الخدمة --}}
+    <section class="home-hero">
+        <div class="home-hero-media">
             @if($hasHeroVisual)
-                @php
-                    $heroLarge = $heroImage ? ($heroImage->variant('gallery')['path'] ?? $heroImage->optimized_path) : null;
-                    $mainHeroSrc = $service->featured_image ? asset('storage/'.$service->featured_image) : asset('storage/'.$heroLarge);
-                    $mainHeroAlt = $service->featured_image_alt ?: ($heroImage?->alt_text ?: $service->name.' في الرياض');
-                @endphp
-                <div class="srvc-hero-art" data-reveal>
-                    <button type="button" class="srvc-hero-image" data-lightbox-item data-lightbox-src="{{ $mainHeroSrc }}?v={{ $service->updated_at?->timestamp ?? 1 }}" data-lightbox-alt="{{ $mainHeroAlt }}" data-lightbox-caption="{{ $service->featured_image_caption ?: $heroImage?->caption }}" aria-label="تكبير صورة {{ $service->name }}">
-                        <x-service-cover :service="$service" :image="$heroImage" :alt="$mainHeroAlt" variant="cover" loading="eager" fetchpriority="high" sizes="(max-width: 560px) 100vw, 55vw" />
-                    </button>
-                    @if($heroInsetImage)
-                        @php($insetLarge = $heroInsetImage->variant('gallery')['path'] ?? $heroInsetImage->optimized_path)
-                        <button type="button" class="srvc-hero-inset" data-lightbox-item data-lightbox-src="{{ asset('storage/'.$insetLarge).'?v='.($heroInsetImage->updated_at?->timestamp ?? 1) }}" data-lightbox-alt="{{ $heroInsetImage->alt_text ?: $service->name }}" data-lightbox-caption="{{ $heroInsetImage->caption }}" aria-label="تكبير صورة أخرى من {{ $service->name }}">
-                            <x-responsive-image :image="$heroInsetImage" :alt="$heroInsetImage->alt_text ?: $service->name" variant="thumbnail" loading="eager" sizes="(max-width: 560px) 42vw, 20vw" />
-                        </button>
-                    @endif
-                </div>
+                @php($mainHeroAlt = $service->featured_image_alt ?: ($heroImage?->alt_text ?: $service->name.' في الرياض'))
+                <x-service-cover :service="$service" :image="$heroImage" :alt="$mainHeroAlt" variant="cover" loading="eager" fetchpriority="high" sizes="100vw" />
             @endif
-            <div class="srvc-hero-copy" data-reveal>
-                <nav class="srvc-breadcrumbs" aria-label="مسار الصفحة">
-                    <a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">الخدمات</a><span>/</span><b aria-current="page">{{ $service->name }}</b>
-                </nav>
-                <p class="srvc-category-label">{{ $service->category->name }}</p>
-                <h1 class="srvc-page-title">@if(str_contains($service->name, 'الرياض')){{ $service->name }}@else{{ $service->name }} الرياض@endif</h1>
-                <p>{{ \Illuminate\Support\Str::limit($service->excerpt, 120) }}</p>
-                <div class="srvc-direct-contact"><span>للتواصل والاستفسار</span><a href="{{ $siteSettings['phone_tel'] }}" dir="ltr">{{ $siteSettings['phone_display'] }}</a></div>
-                <div class="srvc-hero-actions">
-                    <a class="srvc-button srvc-button-primary" href="{{ route('quote', ['service' => $service->id]) }}">اطلب معاينة للموقع</a>
-                    <a class="srvc-button srvc-button-outline" href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.4l1.3-4.7A8.5 8.5 0 1 1 20.5 11.6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.3c.3-.4.7-.3.9.1l1 2c.2.4.1.7-.2 1l-.6.5c.7 1.4 1.8 2.5 3.2 3.2l.5-.6c.3-.3.6-.4 1-.2l2 1c.4.2.5.6.2.9-.5.8-1.3 1.2-2.2 1.1-3.4-.5-6.1-3.2-6.6-6.6-.1-.9.2-1.8.8-2.4Z" fill="currentColor"/></svg>تواصل واتساب</a>
+        </div>
+
+        <div class="container-shell home-hero-inner">
+            <div class="home-hero-copy">
+                <h1>@if(str_contains($service->name, 'الرياض')){{ $service->name }}@else{{ $service->name }} الرياض@endif</h1>
+                <p class="home-hero-lede">{{ \Illuminate\Support\Str::limit($service->excerpt, 120) }}</p>
+
+                <div class="home-hero-actions">
+                    <a class="button button-primary" href="{{ route('quote', ['service' => $service->id]) }}">{{ $siteSettings['inspection_cta_label'] ?? 'اطلب معاينة' }}</a>
+                    <a class="button home-hero-ghost" href="#works">استعرض الصور</a>
+                </div>
+
+                <div class="home-hero-direct">
+                    <a href="{{ $siteSettings['phone_tel'] }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.3 3.8 9.6 8c.3.6.2 1.2-.3 1.6l-1.4 1.1a15 15 0 0 0 5.4 5.4l1.1-1.4c.4-.5 1.1-.6 1.6-.3l4.2 2.3c.6.3.9 1 .7 1.7l-.6 2.1c-.2.8-.9 1.3-1.7 1.4C9.8 22.1 1.9 14.2 2.1 5.4c0-.8.6-1.5 1.4-1.7l2.1-.6c.7-.2 1.4.1 1.7.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span dir="ltr">{{ $siteSettings['phone_display'] }}</span>
+                    </a>
+                    <a href="{{ $serviceWhatsapp }}" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.4l1.3-4.7A8.5 8.5 0 1 1 20.5 11.6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.3c.3-.4.7-.3.9.1l1 2c.2.4.1.7-.2 1l-.6.5c.7 1.4 1.8 2.5 3.2 3.2l.5-.6c.3-.3.6-.4 1-.2l2 1c.4.2.5.6.2.9-.5.8-1.3 1.2-2.2 1.1-3.4-.5-6.1-3.2-6.6-6.6-.1-.9.2-1.8.8-2.4Z" fill="currentColor"/></svg>
+                        <span>تواصل واتساب</span>
+                    </a>
                 </div>
             </div>
         </div>
     </section>
+
+    <x-geo-divider variant="bowtie" class="srvc-divider" />
+
+    <nav class="srvc-breadcrumbs srvc-breadcrumbs-bar" aria-label="مسار الصفحة">
+        <div class="srvc-shell">
+            <a href="{{ route('home') }}">الرئيسية</a><span>/</span><a href="{{ route('services.index') }}">الخدمات</a><span>/</span><b aria-current="page">{{ $service->name }}</b>
+        </div>
+    </nav>
 
     @if($galleryImages->isNotEmpty())
     <section class="srvc-section srvc-works" id="works">

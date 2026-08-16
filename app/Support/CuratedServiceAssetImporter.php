@@ -25,7 +25,7 @@ class CuratedServiceAssetImporter
 
         $assignments = $this->dynamicAssignments($source, $manifest, $counts);
         $assignedServiceNames = $assignments->pluck('service')->unique()->values()->all();
-        $managedFolders = Service::query()->whereNotNull('image_source_folder')->pluck('image_source_folder')->unique()->values()->all();
+        $managedFolders = $this->managedFolders();
         foreach ($assignments->groupBy('service') as $serviceName => $items) {
             $service = Service::query()->where('name', $serviceName)->first();
             if (! $service) {
@@ -39,7 +39,8 @@ class CuratedServiceAssetImporter
                 ]);
             }
 
-            $items = $items->sortBy('relative', SORT_NATURAL | SORT_FLAG_CASE)->values();
+            // صور المجلد الأصلي تسبق صور المجلدات الإضافية فيبقى ترتيب المعرض ثابتًا.
+            $items = $items->sortBy(fn (array $entry): string => $entry['priority'].'|'.$entry['relative'], SORT_NATURAL | SORT_FLAG_CASE)->values();
             $keptHashes = [];
             $coverImageId = null;
             foreach ($items as $index => $entry) {
@@ -214,12 +215,15 @@ class CuratedServiceAssetImporter
 
         $visualContexts = config('service-images.visual_contexts', []);
         $visualOverrides = config('service-images.visual_overrides', []);
-        $defaults = Service::query()->whereNotNull('image_source_folder')->get()->keyBy('image_source_folder');
         $assignments = collect();
-        foreach ($defaults as $folder => $defaultService) {
+        foreach ($this->sourceFolders() as [$folder, $defaultServiceName, $priority, $required]) {
             $folderPath = $source.DIRECTORY_SEPARATOR.$folder;
             if (! is_dir($folderPath)) {
-                throw new RuntimeException('مجلد صور الخدمة غير موجود: '.$folderPath);
+                if ($required) {
+                    throw new RuntimeException('مجلد صور الخدمة غير موجود: '.$folderPath);
+                }
+
+                continue;
             }
 
             foreach ($this->allImages($folderPath) as $file) {
@@ -241,20 +245,51 @@ class CuratedServiceAssetImporter
                 }
 
                 $profile = $explicit[$relative] ?? null;
-                $serviceName = $override['service'] ?? ($profile['service'] ?? $defaultService->name);
+                $serviceName = $override['service'] ?? ($profile['service'] ?? $defaultServiceName);
                 $profile = $serviceProfiles[$serviceName] ?? $profile ?? [];
                 $stem = $override['stem'] ?? config('service-images.service_stems.'.$serviceName, 'service-riyadh');
                 $context = $override['context']
                     ?? ($visualContexts[$folder][basename($file)] ?? null)
                     ?? ($profile['context'] ?? $serviceName);
-                $cover = isset($profile['cover']) && basename($file) === $profile['cover'];
-                $assignments->push(compact('file', 'relative', 'details', 'stem', 'context', 'cover') + ['service' => $serviceName]);
+                $cover = $priority === 0 && isset($profile['cover']) && basename($file) === $profile['cover'];
+                $assignments->push(compact('file', 'relative', 'details', 'stem', 'context', 'cover', 'priority') + ['service' => $serviceName]);
             }
         }
 
         return $assignments
             ->unique(fn (array $entry): string => $entry['service'].'|'.$entry['details']['hash'])
             ->values();
+    }
+
+    /**
+     * مجلدات المصدر مرتبة: مجلد كل خدمة من قاعدة البيانات أولًا (priority 0)
+     * ثم المجلدات الإضافية المعرّفة في التهيئة (priority 1).
+     *
+     * @return list<array{0: string, 1: string, 2: int, 3: bool}>
+     */
+    private function sourceFolders(): array
+    {
+        $folders = Service::query()->whereNotNull('image_source_folder')->get()
+            ->keyBy('image_source_folder')
+            ->map(fn (Service $service, string $folder): array => [$folder, $service->name, 0, true])
+            ->values()
+            ->all();
+
+        foreach (config('service-images.additional_folders', []) as $folder => $serviceName) {
+            $folders[] = [$folder, $serviceName, 1, false];
+        }
+
+        return $folders;
+    }
+
+    /** @return list<string> */
+    private function managedFolders(): array
+    {
+        return collect(Service::query()->whereNotNull('image_source_folder')->pluck('image_source_folder'))
+            ->concat(array_keys(config('service-images.additional_folders', [])))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function ensurePublishedCovers(): void

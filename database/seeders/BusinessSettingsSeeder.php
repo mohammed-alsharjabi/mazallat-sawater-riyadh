@@ -11,10 +11,10 @@ class BusinessSettingsSeeder extends Seeder
     {
         $settings = [
             ['site_name', 'مظلات وسواتر الرياض', 'اسم الموقع'],
-            ['phone_display', '+966 56 206 6426', 'رقم التواصل الظاهر'],
-            ['phone_e164', '+966562066426', 'رقم التواصل الدولي'],
-            ['phone_tel', 'tel:+966562066426', 'رابط الاتصال'],
-            ['whatsapp_url', 'https://wa.me/966562066426', 'رابط واتساب'],
+            ['phone_display', config('site.fallback.phone_display'), 'رقم التواصل الظاهر'],
+            ['phone_e164', config('site.fallback.phone_e164'), 'رقم التواصل الدولي'],
+            ['phone_tel', config('site.fallback.phone_tel'), 'رابط الاتصال'],
+            ['whatsapp_url', config('site.fallback.whatsapp_url'), 'رابط واتساب'],
             ['address', 'الرياض، وسط الرياض، المملكة العربية السعودية', 'العنوان'],
             ['city', 'الرياض', 'المدينة'],
             ['country', 'المملكة العربية السعودية', 'الدولة'],
@@ -25,6 +25,7 @@ class BusinessSettingsSeeder extends Seeder
             ['hero_description', 'مظلات وسواتر وبرجولات بتصميم هندسي وتنفيذ يليق بمشروعك.', 'وصف Hero'],
             ['about_image', config('site.about_image'), 'صورة من نحن'],
             ['header_image', config('site.header_image'), 'صورة الهيدر بجوار اسم الموقع'],
+            ['hero_image', config('site.hero_image'), 'صورة الهيرو في الصفحة الرئيسية'],
             ['inspection_cta_label', 'اطلب معاينة', 'نص زر المعاينة'],
         ];
 
