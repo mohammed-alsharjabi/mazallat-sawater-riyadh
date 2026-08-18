@@ -48,18 +48,18 @@
         <div class="home-service-grid">
             @foreach($serviceCards as $service)
                 @php($cover = $service->images->firstWhere('is_cover', true) ?: $service->images->first())
-                <article class="home-service-card" data-reveal style="--reveal-delay: {{ ($loop->index % 3) * 70 }}ms">
-                    <a class="home-service-media" href="{{ route('services.show', $service->slug) }}" aria-label="عرض {{ $service->name }}">
+                <a class="home-service-card" href="{{ route('services.show', $service->slug) }}" data-reveal style="--reveal-delay: {{ ($loop->index % 3) * 70 }}ms">
+                    <span class="home-service-media">
                         <x-service-cover :service="$service" :image="$cover" :alt="$service->featured_image_alt ?: $service->name" loading="lazy" sizes="(max-width: 560px) 100vw, (max-width: 1050px) 50vw, 33vw" />
-                    </a>
-                    <div class="home-service-body">
-                        <h3><a href="{{ route('services.show', $service->slug) }}">{{ $service->name }}</a></h3>
+                    </span>
+                    <span class="home-service-body">
+                        <h3>{{ $service->name }}</h3>
                         <p>{{ \Illuminate\Support\Str::limit($service->excerpt, 132) }}</p>
                         <span class="home-service-more">شاهد الصور والتفاصيل
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </span>
-                    </div>
-                </article>
+                    </span>
+                </a>
             @endforeach
         </div>
     </div>

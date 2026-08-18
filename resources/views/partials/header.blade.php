@@ -3,6 +3,11 @@
     $headerImage = $siteSettings['header_image'] ?? config('site.header_image');
 @endphp
 <header class="site-header" data-header>
+    <span class="header-geo" aria-hidden="true">
+        <span class="header-geo-plane header-geo-plane-a"></span>
+        <span class="header-geo-plane header-geo-plane-b"></span>
+        <span class="header-geo-plane header-geo-plane-c"></span>
+    </span>
     <div class="container-shell header-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
             <img class="header-brand-photo" src="{{ asset('storage/'.$headerImage) }}" alt="" width="64" height="64" fetchpriority="high">
@@ -36,14 +41,6 @@
             <span class="mobile-header-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>{{ $siteSettings['city'] }}</span>
             <a href="{{ $siteSettings['phone_tel'] }}" aria-label="اتصال"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.3 3.8 9.6 8c.3.6.2 1.2-.3 1.6l-1.4 1.1a15 15 0 0 0 5.4 5.4l1.1-1.4c.4-.5 1.1-.6 1.6-.3l4.2 2.3c.6.3.9 1 .7 1.7l-.6 2.1c-.2.8-.9 1.3-1.7 1.4C9.8 22.1 1.9 14.2 2.1 5.4c0-.8.6-1.5 1.4-1.7l2.1-.6c.7-.2 1.4.1 1.7.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
             <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-navigation" data-nav-toggle><span></span><span></span><span></span><b class="sr-only">فتح القائمة</b></button>
-        </div>
-    </div>
-
-    <div class="service-shortcuts" aria-label="الخدمات الأساسية">
-        <div class="container-shell">
-            @foreach($navigationCategories as $category)
-                <a href="{{ route('services.category', $category['slug']) }}">{{ $category['name'] }}</a>
-            @endforeach
         </div>
     </div>
 </header>

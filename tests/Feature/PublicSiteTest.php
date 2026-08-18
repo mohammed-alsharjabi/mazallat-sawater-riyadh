@@ -44,6 +44,9 @@ class PublicSiteTest extends TestCase
             ->assertSee('home-service-grid', false)
             ->assertSee('home-hero-media', false)
             ->assertSee('geo-divider', false)
+            ->assertSee('header-geo', false)
+            ->assertDontSee('service-shortcuts', false)
+            ->assertSee('property="og:image" content="'.asset('storage/'.config('site.hero_image')).'"', false)
             ->assertSee('مظلات وسواتر وبرجولات بصور حقيقية ووصف واضح');
 
         foreach (['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms', 'sitemap', 'robots'] as $route) {
@@ -83,6 +86,25 @@ class PublicSiteTest extends TestCase
             ->assertSee('storage/services/sawater-riyadh.webp', false)
             ->assertSee('class="site-header"', false)
             ->assertDontSee('service-design-header', false);
+    }
+
+    public function test_related_services_use_distinct_cover_images_and_homepage_cards_are_fully_clickable(): void
+    {
+        $pairs = [
+            ['الخيام', 'بيوت الشعر'],
+            ['جلسات زجاجية', 'الجلسات الشتوية'],
+            ['الشترات والأبواب الإلكترونية', 'الشترات'],
+        ];
+
+        foreach ($pairs as [$first, $second]) {
+            $left = Service::query()->where('name', $first)->firstOrFail();
+            $right = Service::query()->where('name', $second)->firstOrFail();
+            $this->assertNotSame($left->featured_image, $right->featured_image, $first.' و'.$second.' يجب ألا يتشاركا صورة الغلاف');
+        }
+
+        $service = Service::published()->where('name', 'مظلات PVC')->firstOrFail();
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('class="home-service-card" href="'.route('services.show', $service->slug).'"', $html);
     }
 
     public function test_about_page_presents_verified_experience_image_and_phone(): void

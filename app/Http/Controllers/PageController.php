@@ -13,6 +13,7 @@ use App\Models\ServiceImage;
 use App\Models\TrustItem;
 use App\Support\ArticleContent;
 use App\Support\Seo;
+use App\Support\SettingsRepository;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
@@ -40,6 +41,7 @@ class PageController extends Controller
         $galleryImages = $this->homeGalleryImages();
         $trustItems = TrustItem::query()->where('is_active', true)->orderBy('sort_order')->get();
         $seo = Seo::page('مظلات وسواتر الرياض | تصميم وتنفيذ ومعاينة', 'تصميم وتركيب مظلات وسواتر وبرجولات في الرياض بخيارات مدروسة للموقع والخامة وطريقة التثبيت. شاهد الأعمال واطلب معاينة.', $heroService);
+        $seo['og_image'] = app(SettingsRepository::class)->public()['hero_image'] ?? config('site.hero_image');
 
         return view('pages.home', compact('serviceCards', 'galleryImages', 'trustItems', 'seo'));
     }
