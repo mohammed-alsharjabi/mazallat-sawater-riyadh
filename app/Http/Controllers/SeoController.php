@@ -31,8 +31,11 @@ class SeoController extends Controller
     {
         $urls = collect([
             ['loc' => route('home'), 'lastmod' => now()->toDateString(), 'priority' => '1.0'],
-            ...collect(['about', 'services.index', 'projects.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms'])
+            ...collect(['about', 'services.index', 'areas.index', 'guide.index', 'prices', 'quote', 'contact', 'privacy', 'terms'])
                 ->map(fn ($name) => ['loc' => route($name), 'lastmod' => now()->toDateString(), 'priority' => '0.7'])->all(),
+            ...(Project::published()->exists()
+                ? [['loc' => route('projects.index'), 'lastmod' => now()->toDateString(), 'priority' => '0.7']]
+                : []),
         ]);
         ServiceCategory::query()->where('is_active', true)->whereHas('services', fn ($query) => $query->published())->each(
             fn ($item) => $urls->push(['loc' => route('services.category', $item->slug), 'lastmod' => $item->updated_at->toDateString(), 'priority' => '0.8'])

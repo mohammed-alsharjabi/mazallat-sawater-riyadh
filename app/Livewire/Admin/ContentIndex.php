@@ -33,6 +33,9 @@ class ContentIndex extends Component
         if (in_array($this->type, ['services', 'service-categories'], true)) {
             Cache::forget('navigation.service-categories');
         }
+        if ($this->type === 'projects') {
+            Cache::forget('navigation.has-published-projects');
+        }
         session()->flash('success', 'حُذف السجل.');
     }
 

@@ -6,8 +6,10 @@ use App\Jobs\ProcessNewLead;
 use App\Models\Area;
 use App\Models\Article;
 use App\Models\Lead;
+use App\Models\Project;
 use App\Models\Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -37,7 +39,7 @@ class PublicSiteTest extends TestCase
             ->assertSee('tel:+966508667812', false)
             ->assertSee('https://wa.me/966508667812', false)
             ->assertSee('application/ld+json', false)
-            ->assertSee('brand/mazallat-sawater-riyadh-logo.svg', false)
+            ->assertSee('brand/mazallat-sawater-riyadh-logo.png', false)
             ->assertSee('brand/mazallat-sawater-riyadh-icon.svg', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('data-mobile-drawer', false)
@@ -62,6 +64,30 @@ class PublicSiteTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('مظلات PVC');
     }
 
+    public function test_projects_navigation_appears_only_after_a_project_is_published_from_admin(): void
+    {
+        $home = $this->get(route('home'))->assertOk();
+        $home->assertDontSee('href="'.route('projects.index').'"', false);
+        $home->assertDontSee('>المشاريع</a>', false);
+
+        $service = Service::published()->firstOrFail();
+        $area = Area::published()->firstOrFail();
+        Project::query()->create([
+            'service_id' => $service->id,
+            'area_id' => $area->id,
+            'title' => 'مشروع تجريبي منشور',
+            'excerpt' => 'مشروع أُضيف من لوحة التحكم.',
+            'status' => 'published',
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+        Cache::forget('navigation.has-published-projects');
+
+        $updated = $this->get(route('home'))->assertOk();
+        $updated->assertSee('href="'.route('projects.index').'"', false);
+        $updated->assertSee('>المشاريع</a>', false);
+    }
+
     public function test_published_detail_pages_are_accessible_by_arabic_slug(): void
     {
         $service = Service::published()->firstOrFail();
@@ -78,12 +104,13 @@ class PublicSiteTest extends TestCase
     public function test_curated_service_cover_fills_services_without_gallery_images(): void
     {
         $service = Service::published()->where('name', 'سواتر حديد')->firstOrFail();
+        $cover = config('site.service_featured_images.سواتر حديد');
 
         $this->assertSame(0, $service->images()->count());
-        $this->assertSame('services/sawater-riyadh.webp', $service->featured_image);
+        $this->assertSame($cover, $service->featured_image);
 
         $this->get(route('services.show', $service->slug))->assertOk()
-            ->assertSee('storage/services/sawater-riyadh.webp', false)
+            ->assertSee('storage/'.$cover, false)
             ->assertSee('class="site-header"', false)
             ->assertDontSee('service-design-header', false);
     }
@@ -94,6 +121,9 @@ class PublicSiteTest extends TestCase
             ['الخيام', 'بيوت الشعر'],
             ['جلسات زجاجية', 'الجلسات الشتوية'],
             ['الشترات والأبواب الإلكترونية', 'الشترات'],
+            ['سواتر حديد', 'سواتر خشب'],
+            ['سواتر خشب', 'سواتر قماش'],
+            ['سواتر حديد', 'سواتر قماش'],
         ];
 
         foreach ($pairs as [$first, $second]) {

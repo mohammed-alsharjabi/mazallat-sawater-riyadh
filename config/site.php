@@ -30,9 +30,9 @@ return [
     'service_featured_images' => [
         'مظلات PVC' => 'services/shadanshai.webp',
         'مظلات الشد الإنشائي' => 'services/tensile-structure-shade-riyadh.webp',
-        'سواتر حديد' => 'services/sawater-riyadh.webp',
+        'سواتر حديد' => 'services/sawater-hadeed-riyadh.webp',
         'سواتر خشب' => 'services/sawater-riyadh.webp',
-        'سواتر قماش' => 'services/sawater-riyadh.webp',
+        'سواتر قماش' => 'services/sawater-qomash-riyadh.webp',
         'الخيام' => 'services/tents-riyadh.webp',
         'بيوت الشعر' => 'services/tents-bayt-alshaar-riyadh.webp',
         'البرجولات' => 'services/pergolas-riyadh.webp',

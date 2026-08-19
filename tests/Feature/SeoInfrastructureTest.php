@@ -58,7 +58,7 @@ class SeoInfrastructureTest extends TestCase
             ->assertSee('property="og:title"', false)
             ->assertSee('name="twitter:card" content="summary_large_image"', false)
             ->assertSee('"@type":"Organization"', false)
-            ->assertSee(asset('brand/mazallat-sawater-riyadh-logo.svg'), false)
+            ->assertSee(asset('brand/mazallat-sawater-riyadh-logo.png'), false)
             ->assertSee('"@type":"LocalBusiness"', false)
             ->assertSee('"@type":"BreadcrumbList"', false)
             ->assertSee('"@type":"Service"', false)

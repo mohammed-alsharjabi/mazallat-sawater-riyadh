@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Project;
 use App\Models\ServiceCategory;
 use App\Policies\ContentPolicy;
 use App\Support\CuratedServiceAssetImporter;
@@ -55,6 +56,9 @@ class AppServiceProvider extends ServiceProvider
                     ])->all())
                 : collect();
             $view->with('navServiceCategories', $categories);
+            $view->with('hasPublishedProjects', Schema::hasTable('projects')
+                ? Cache::remember('navigation.has-published-projects', now()->addMinutes(20), fn () => Project::published()->exists())
+                : false);
         });
         $this->scheduleServiceAssetSyncAfterResponse();
     }

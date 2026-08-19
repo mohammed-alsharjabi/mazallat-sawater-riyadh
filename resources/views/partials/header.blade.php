@@ -1,17 +1,32 @@
 @php
     $navigationCategories = collect($navServiceCategories)->filter(fn ($category) => ! empty($category['services']));
-    $headerImage = $siteSettings['header_image'] ?? config('site.header_image');
 @endphp
 <header class="site-header" data-header>
     <span class="header-geo" aria-hidden="true">
-        <span class="header-geo-plane header-geo-plane-a"></span>
-        <span class="header-geo-plane header-geo-plane-b"></span>
-        <span class="header-geo-plane header-geo-plane-c"></span>
+        <span class="header-geo-facet header-geo-facet-start"></span>
+        <span class="header-geo-facet header-geo-facet-end"></span>
+        <svg class="header-geo-weave" width="100%" height="100%" focusable="false">
+            <defs>
+                <pattern id="header-geo-weave-tile" width="120" height="86" patternUnits="userSpaceOnUse">
+                    <path d="M-8 34 L52 -6 L112 34" />
+                    <path d="M-8 78 L52 38 L112 78" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#header-geo-weave-tile)" />
+        </svg>
+        <svg class="header-geo-edge" width="100%" height="14" focusable="false">
+            <defs>
+                <pattern id="header-geo-edge-tile" width="120" height="14" patternUnits="userSpaceOnUse">
+                    <path class="header-geo-edge-back" d="M0 -7 L60 4 L120 -7 L120 14 L0 14 Z" />
+                    <path class="header-geo-edge-front" d="M0 0 L60 11 L120 0 L120 14 L0 14 Z" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#header-geo-edge-tile)" />
+        </svg>
     </span>
     <div class="container-shell header-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية">
-            <img class="header-brand-photo" src="{{ asset('storage/'.$headerImage) }}" alt="" width="64" height="64" fetchpriority="high">
-            <span class="header-brand-copy"><strong>{{ $siteSettings['site_name'] }}</strong><small>خبرة في التنفيذ منذ 1999</small></span>
+            <x-site-logo class="header-brand-logo" :alt="$siteSettings['site_name']" fetchpriority="high" />
         </a>
 
         <nav class="desktop-nav" aria-label="التنقل الرئيسي">
@@ -30,7 +45,9 @@
                     <a class="dropdown-all" href="{{ route('services.index') }}">عرض جميع الخدمات ←</a>
                 </div>
             </div>
-            <a @class(['active' => request()->routeIs('projects.*')]) href="{{ route('projects.index') }}">المشاريع</a>
+            @if($hasPublishedProjects ?? false)
+                <a @class(['active' => request()->routeIs('projects.*')]) href="{{ route('projects.index') }}">المشاريع</a>
+            @endif
             <a @class(['active' => request()->routeIs('guide.*')]) href="{{ route('guide.index') }}">دليل البناء</a>
             <a @class(['active' => request()->routeIs('about')]) href="{{ route('about') }}">من نحن</a>
             <a @class(['active' => request()->routeIs('contact')]) href="{{ route('contact') }}">تواصل معنا</a>
@@ -47,11 +64,13 @@
 
 <div class="nav-backdrop" data-nav-backdrop hidden></div>
 <aside id="mobile-navigation" class="mobile-drawer" aria-label="قائمة الجوال" aria-hidden="true" data-mobile-drawer>
-    <div class="mobile-drawer-head"><a class="drawer-brand" href="{{ route('home') }}" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية"><img src="{{ asset('storage/'.$headerImage) }}" alt="" width="54" height="54"><span><strong>{{ $siteSettings['site_name'] }}</strong><small>منذ 1999</small></span></a><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
+    <div class="mobile-drawer-head"><a class="drawer-brand" href="{{ route('home') }}" aria-label="{{ $siteSettings['site_name'] }} - الرئيسية"><x-site-logo class="drawer-brand-logo" :alt="$siteSettings['site_name']" /></a><button type="button" data-nav-close aria-label="إغلاق القائمة">×</button></div>
     <nav>
         <a href="{{ route('home') }}">الرئيسية</a>
         <details><summary>الخدمات</summary><div>@foreach($navigationCategories as $category)<strong>{{ $category['name'] }}</strong>@foreach($category['services'] as $item)<a href="{{ route('services.show', $item['slug']) }}">{{ $item['name'] }}</a>@endforeach @endforeach</div></details>
-        <a href="{{ route('projects.index') }}">المشاريع</a>
+        @if($hasPublishedProjects ?? false)
+            <a href="{{ route('projects.index') }}">المشاريع</a>
+        @endif
         <a href="{{ route('guide.index') }}">دليل البناء</a>
         <a href="{{ route('about') }}">من نحن</a>
         <a href="{{ route('contact') }}">تواصل معنا</a>

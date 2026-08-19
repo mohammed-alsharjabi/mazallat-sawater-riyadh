@@ -24,7 +24,9 @@
         <nav class="footer-column" aria-label="روابط مهمة">
             <h2>روابط مهمة</h2>
             <a href="{{ route('services.index') }}">الخدمات</a>
-            <a href="{{ route('projects.index') }}">أعمالنا</a>
+            @if($hasPublishedProjects ?? false)
+                <a href="{{ route('projects.index') }}">أعمالنا</a>
+            @endif
             <a href="{{ route('guide.index') }}">دليل البناء</a>
             <a href="{{ route('about') }}">من نحن</a>
             <a href="{{ route('contact') }}">تواصل معنا</a>

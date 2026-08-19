@@ -174,6 +174,9 @@ class ContentEditor extends Component
         if (in_array($this->type, ['services', 'service-categories'], true)) {
             Cache::forget('navigation.service-categories');
         }
+        if ($this->type === 'projects') {
+            Cache::forget('navigation.has-published-projects');
+        }
         $this->record = $model->id;
         foreach ($definition['relations'] ?? [] as $key => $relation) {
             $model->{$relation['relation']}()->sync($this->relations[$key] ?? []);
