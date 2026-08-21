@@ -36,8 +36,8 @@ class PublicSiteTest extends TestCase
         $response->assertOk()
             ->assertSee('<html lang="ar-SA" dir="rtl">', false)
             ->assertSee('مظلات PVC')
-            ->assertSee('tel:+966508667812', false)
-            ->assertSee('https://wa.me/966508667812', false)
+            ->assertSee('tel:+966509439667', false)
+            ->assertSee('https://wa.me/966509439667', false)
             ->assertSee('application/ld+json', false)
             ->assertSee('brand/mazallat-sawater-riyadh-logo.png', false)
             ->assertSee('brand/mazallat-sawater-riyadh-icon.svg', false)
@@ -142,7 +142,7 @@ class PublicSiteTest extends TestCase
         $this->get(route('about'))->assertOk()
             ->assertSee('بدأ عملنا في السواتر عام 1999')
             ->assertSee('مشاريع حكومية ولشركات كبيرة')
-            ->assertSee('050 866 7812')
+            ->assertSee('050 943 9667')
             ->assertSee('storage/about/aboutus.webp', false);
     }
 

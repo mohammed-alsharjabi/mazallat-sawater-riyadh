@@ -6,12 +6,12 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /** @var array<string, array{0: string, 1: string}> القيمة الجديدة ثم القيمة السابقة */
+    /** @var array<string, array{0: string, 1: string}> القيمة الجديدة ثم السابقة */
     private array $contacts = [
-        'phone_display' => ['050 943 9667', '+966 56 206 6426'],
-        'phone_e164' => ['+966509439667', '+966562066426'],
-        'phone_tel' => ['tel:+966509439667', 'tel:+966562066426'],
-        'whatsapp_url' => ['https://wa.me/966509439667', 'https://wa.me/966562066426'],
+        'phone_display' => ['050 943 9667', '050 866 7812'],
+        'phone_e164' => ['+966509439667', '+966508667812'],
+        'phone_tel' => ['tel:+966509439667', 'tel:+966508667812'],
+        'whatsapp_url' => ['https://wa.me/966509439667', 'https://wa.me/966508667812'],
     ];
 
     public function up(): void
